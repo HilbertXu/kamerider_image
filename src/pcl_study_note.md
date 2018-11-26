@@ -73,3 +73,5 @@ pcl::PCLPointCloud2
 然后使用pcl的io接口进行pcd文件的写入
 'pcl::io::savePCDFileASCII(path, cloud);'
 
+###从PCD文件实现点云的可视化
+
