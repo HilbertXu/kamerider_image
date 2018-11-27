@@ -221,6 +221,9 @@ target_link_libraries(save_pcl_as_pcd ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_executable(pcd_visualization src/pcd_visualization.cpp)
 target_link_libraries(pcd_visualization ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+add_executable(pcd_simple_viewer src/pcd_simple_viewer.cpp)
+target_link_libraries(pcd_simple_viewer ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 
 
 
