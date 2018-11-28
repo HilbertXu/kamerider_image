@@ -224,6 +224,9 @@ target_link_libraries(pcd_visualization ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 add_executable(pcd_simple_viewer src/pcd_simple_viewer.cpp)
 target_link_libraries(pcd_simple_viewer ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
+add_executable(pcl_keypoint_detect src/pcl_keypoint_detect.cpp)
+target_link_libraries(pcl_keypoint_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 
 
 
