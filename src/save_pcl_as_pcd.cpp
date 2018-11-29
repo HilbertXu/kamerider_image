@@ -61,6 +61,13 @@ void pclCallback(const sensor_msgs::PointCloud2& msg)
 
 }
 
+/*
+@TODO
+将按下‘s’键保存当前RGB图片和点云数据修改成为
+接受到导航节点发送过来的已经到达目标点的消息时保存数据
+同时增加向语音节点发送消息的发布器，通过语音节点实现人机交互
+*/
+
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);

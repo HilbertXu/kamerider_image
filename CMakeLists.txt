@@ -13,14 +13,21 @@ find_package(catkin REQUIRED COMPONENTS
   image_transport
   roscpp
   rospy
+  pcl_conversions
+  pcl_msgs
+  pcl_ros
   sensor_msgs
   std_msgs
-  pcl_conversions
-  pcl_ros
   tf
 )
+find_package(PCL 1.9 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
+#find_package(PCL 1.9 REQUIRED)
+#set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
+#add_definitions(${PCL_DEFINITIONS})
+#include_directories(${PCL_INCLUDE_DIRS})
+#link_directories(${PCL_LIBRARY_DIRS})
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -124,8 +131,9 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+include
   ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -154,8 +162,9 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(${PROJECT_NAME}_node
+#target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
+#   ${PCL_LIBRARIES}
 # )
 
 #############
@@ -207,26 +216,28 @@ include_directories(
 # catkin_add_nosetests(test)
 
 add_executable(get_position src/get_position.cpp)
-target_link_libraries(get_position ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(get_position ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(pcl_dataFormat src/pcl_dataFormat.cpp)
-target_link_libraries(pcl_dataFormat ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(pcl_dataFormat ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(pcl_withFilter src/pcl_withFilter.cpp)
-target_link_libraries(pcl_withFilter ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(pcl_withFilter ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(save_pcl_as_pcd src/save_pcl_as_pcd.cpp)
-target_link_libraries(save_pcl_as_pcd ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(save_pcl_as_pcd ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(pcd_visualization src/pcd_visualization.cpp)
-target_link_libraries(pcd_visualization ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(pcd_visualization ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(pcd_simple_viewer src/pcd_simple_viewer.cpp)
-target_link_libraries(pcd_simple_viewer ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(pcd_simple_viewer ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(pcl_keypoint_detect src/pcl_keypoint_detect.cpp)
-target_link_libraries(pcl_keypoint_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(pcl_keypoint_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
+add_executable(pcl_segmentate src/pcl_segmentate.cpp)
+target_link_libraries(pcl_segmentate ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 
 

@@ -1,5 +1,25 @@
 #这是学习PCL基本操作以及如何在ROS中应用的笔记
 
+**使用须知**
+必须安装pcl-1.9.1 否则会缺少一系列与点云分割有关的头文件
+'
+	git clone https://github.com/PointCloudLibrary/pcl.git
+
+	cd pcl
+	mkdir release
+	cd release
+	cmake -DCMAKE_BUILD_TYPE=None -DCMAKE_INSTALL_PREFIX=/usr \
+		-DBUILD_GPU=ON -DBUILD_apps=ON -DBUILD_examples=ON \
+		-DCMAKE_INSTALL_PREFIX=/usr ..
+	make -j8
+	sudo make install
+'
+源码安装完之后在cmakelists.txt里添加如下语句
+find_package(PCL 1.9 REQUIRED)
+然后在对每一个cpp文件编译时的target_link_libraries里加入${PCL_LIBRARIES}
+eg: target_link_libraries(pcl_segmentate ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+
 ##ROS点云与PCL点云之间的转换
 
 ###PCL基础点云类的数据结构
@@ -104,5 +124,6 @@ boost::shared_ptr<pcl::visualization::PCLVisualizer> simpleVis(pcl::PointCloud<p
 '
 
 ##点云关键点检测
-
+已经完成了Harris和Sift关键点检测的程序
+但是效果并不理想
 
