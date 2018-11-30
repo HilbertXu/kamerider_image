@@ -77,6 +77,7 @@ void pclCallback(const sensor_msgs::PointCloud2& msg)
         //使用从ROS类型到PCL类型的转换函数
         pcl::fromROSMsg(msg, cloud_frame);
         origin_cloud_ptr = &cloud_frame;
+        IF_SAVE_PCL = false;
     }
 
     
@@ -89,9 +90,13 @@ void navCallback(const std_msgs::String::ConstPtr& msg)
     }
 }
 
-void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud);
+void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
 {
-
+    //算法思想是先用超体聚类方法进行一次过分割
+    //超体聚类算法类似于晶体结晶的过程，设置结晶核大小，之后结晶核会通过不同块之间的凹凸关系判断
+    //其中使用了两种约束条件 CC（Extended Convexity Criterion） 和 SC （Sanity criterion）
+    //然后再使用LCCP(Locally Convex Connected Patches)算法进行聚类
+    //将过分割的情况转换成正常分割的情况
 }
 
 int main(int argc, int argv)
