@@ -76,7 +76,7 @@ void pclCallback(const sensor_msgs::PointCloud2& msg)
         //对容器中点云进行复制
         //使用从ROS类型到PCL类型的转换函数
         pcl::fromROSMsg(msg, cloud_frame);
-        origin_cloud_ptr = &cloud_frame;
+        *origin_cloud_ptr = cloud_frame;
         IF_SAVE_PCL = false;
     }
 
@@ -86,6 +86,7 @@ void navCallback(const std_msgs::String::ConstPtr& msg)
 {
     if(msg->data == "arrived_at_observe_position")
     {
+        //到达指定导航点之后开始拍摄照片，并记录点云数据
         IF_SAVE_PCL = true;
     }
 }
@@ -97,9 +98,144 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
     //其中使用了两种约束条件 CC（Extended Convexity Criterion） 和 SC （Sanity criterion）
     //然后再使用LCCP(Locally Convex Connected Patches)算法进行聚类
     //将过分割的情况转换成正常分割的情况
+    pcl::SupervoxelClustering<PointT> super(voxel_resolution, seed_resolution);
+    super.setUseSingleCameraTransform(use_single_cam_transform);
+    super.setInputCloud(origin_cloud_ptr);  
+	super.setColorImportance(color_importance);
+	super.setSpatialImportance(spatial_importance);
+	super.setNormalImportance(normal_importance);
+	std::map<uint32_t, pcl::Supervoxel<PointT>::Ptr> supervoxel_clusters;
+ 
+	PCL_INFO("Extracting supervoxels\n");
+	super.extract(supervoxel_clusters);
+ 
+	PCL_INFO("Getting supervoxel adjacency\n");
+	std::multimap<uint32_t, uint32_t> supervoxel_adjacency;
+	super.getSupervoxelAdjacency(supervoxel_adjacency);
+
+    pcl::PointCloud<pcl::PointXYZL>::Ptr over_seg = super.getLabeledCloud();
+
+    //读写文件操作
+    ofstream outFile1(OUTPUT_DIR+"over_seg.txt", std::ios_base::out);
+    for (int i=0; i<over_seg->size(); i++)
+    {        
+        outFile1 << over_seg->points[i].x << "\t" << over_seg->points[i].y << "\t" 
+                 << over_seg->points[i].z << "\t" << over_seg->points[i].label << std::endl;
+    }
+
+    int label_max1 = 0;
+    for (int i=0; i<over_seg->size(); i++)
+    {
+        if (over_seg->points[i].label > label_max1)
+        {
+            label_max1 = over_seg->pointsp[i].label;
+        }
+    }
+
+    //对点云进行染色，区分第一次过分割分割的结果
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr ColoredCloud1(new pcl::PointCloud<pcl::PointXYZRGB>);
+    ColoredCloud1->height = 1;
+    ColoredCloud1->width = over_seg->size();
+    ColoredCloud1->resize(over_seg->size());
+    for (int i=0; i < label_max1; i++)
+    {
+        int color_R = Random(255);
+        int color_G = Random(255);
+        int color_B = Random(255);
+
+        for(int j=0; j < over_seg-size(); j++)
+        {
+            if(over_seg->points[j].label == i)
+            {
+                ColoredCloud1->points[j].x = over_seg->points[j].x;
+                ColoredCloud1->points[j].y = over_seg->points[j].y;
+                ColoredCloud1->points[j].z = over_seg->points[j].z;
+                //RGB
+                ColoredCloud1->points[j].r = color_R;
+                ColoredCloud1->points[j].g = color_G;
+                ColoredCloud1->points[j].B = color_B;
+            }
+        }
+    }
+    
+	pcl::io::savePCDFileASCII(PCD_DIR + "over_seg.pcd", *ColoredCloud1);
+
+    //LCCP分割
+    PCL_INFO ("Start Segmentation\n");
+    pcl::LCCPSegmentation<PointT> lccp;
+    lccp.setConcavityToleranceThreshold(concavity_tolerance_threshold);
+	lccp.setSmoothnessCheck(true, voxel_resolution, seed_resolution, smoothness_threshold);
+	lccp.setKFactor(k_factor);
+	lccp.setInputSupervoxels(supervoxel_clusters, supervoxel_adjacency);
+	lccp.setMinSegmentSize(min_segment_size);
+    lccp.segment();
+
+    PCL_INFO ("Interpolation voxel cloud -> Input cloud and relabeling\n");
+
+    pcl::PointCloud<pcl::PointXYZL>::Ptr sv_labeled_cloud   = super.getLabeledCloud();
+    pcl::PointCloud<pcl::PointXYZL>::Ptr lccp_labeled_cloud = sv_labeled_cloud->makeShared();
+    lccp.relabelCloud(*lccp_labeled_cloud);
+    SupervoxelAdjacencyList sv_adjacency_list;
+    lccp.getSVAdjacencyList(sv_adjacency_list);
+
+    ofstream outFile2 (OUTPUT_DIR + "overSeg_merge.txt", std::ios_base::out);
+    for (int i=0; i < lccp_labeled_cloud->size(); i++)
+    {
+        outFile2 << lccp_labeled_cloud->points[i].x << "\t" << lccp_labeled_cloud->points[i].y << "\t"
+                 << lccp_labeled_cloud->points[i].z << "\t" << lccp_labeled_cloud->points[i].label << std::endl;
+    }
+
+    int label_max2 = 0;
+    for (int i=0; i < lccp_labeled_cloud->size(); i++)
+    {
+        if(lccp_labeled_cloud->points[i].label > label_max2)
+        {
+            label_max2 = lccp_labeled_cloud->points[i].label;
+        }
+    }
+
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr ColoredCloud2(new pcl::PointCloud<pcl::PointXYZRGB>);
+    ColoredCloud2->height = 1;
+    ColoredCloud2->width  = lccp_labeled_cloud->size();
+    ColoredCloud2->resize(lccp_labeled_cloud->size());
+
+    for (int i = 0; i < label_max2; i++) 
+    {
+		int color_R = Random(255);
+		int color_G = Random(255);
+		int color_B = Random(255);
+
+		for (int j = 0; j < lccp_labeled_cloud->size(); j++) 
+        {
+			if (lccp_labeled_cloud->points[j].label == i) 
+            {
+				ColoredCloud2->points[j].x = lccp_labeled_cloud->points[j].x;
+				ColoredCloud2->points[j].y = lccp_labeled_cloud->points[j].y;
+				ColoredCloud2->points[j].z = lccp_labeled_cloud->points[j].z;
+				ColoredCloud2->points[j].r = color_R;
+				ColoredCloud2->points[j].g = color_G;
+				ColoredCloud2->points[j].b = color_B;
+			}
+		}
+    }
+    pcl::io::savePCDFileASCII (PCD_DIR + "overSeg_merge.pcd", *ColoredCloud2);
+
+    //分割结果可视化
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer);
+    viewer->setBackgroundColor(255,251,240);
+    viewer->setCameraPosition(0, 0, -3.0, 0, -1.0);
+    viewer->addCoordinateSystem(0.3);
+    viewer->addPointCloud(ColoredCloud2, "lccp");
+    viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "lccp");
+
+    while (!viewer->wasStopped())
+    {
+        viewer->spinOnce(100);
+        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+    }
 }
 
-int main(int argc, int argv)
+int main(int argc, char **argv)
 {
     if(argc < 2)
     {
@@ -123,9 +259,9 @@ int main(int argc, int argv)
         std::cout << "-------------------Read PCL From PCD Files-------------------" << std::endl;
         std::cout << "---------------Reading " << argv[1] << " file-------------" << std::endl;
         std::string FILE_NAME = argv[1];
-        std::full_path = PCD_DIR + FILE_NAME;
+        std::string FULL_PATH = PCD_DIR + FILE_NAME;
 
-        if (pcl::io::loadPCDFile<PointXYZRGBA> ((dir + filename), *origin_cloud_ptr) == -1)
+        if (pcl::io::loadPCDFile<PointXYZRGBA> (FULL_PATH, *origin_cloud_ptr) == -1)
         {
             PCL_ERROR ("Couldn't read PCD file \n");
             return 0;

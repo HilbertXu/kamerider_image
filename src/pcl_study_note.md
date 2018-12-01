@@ -1,7 +1,7 @@
 #这是学习PCL基本操作以及如何在ROS中应用的笔记
 
 **使用须知**
-必须安装pcl-1.9.1 否则会缺少一系列与点云分割有关的头文件
+1. 必须安装pcl-1.9.1 否则会缺少一系列与点云分割有关的头文件
 '
 	git clone https://github.com/PointCloudLibrary/pcl.git
 
@@ -18,6 +18,12 @@
 find_package(PCL 1.9 REQUIRED)
 然后在对每一个cpp文件编译时的target_link_libraries里加入${PCL_LIBRARIES}
 eg: target_link_libraries(pcl_segmentate ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+2. 在修改玩package的依赖为pcl-1.9之后，因为ROS默认的pcl环境为pcl-1.7， 所以我们调用的pcl_ros, pcl_conversions 包默认调用的都是pcl-1.7，也需要进行修改 
+必须修改/opt/ros/kinetic/share路径下的pcl_conversions/cmake/pcl_conversionsConfig.cmake
+以及pcl_ros/cmake/pcl_rosConfig.cmake
+
+将其中的pcl-1.7查找替换为之前安装好的pcl-1.9
 
 
 ##ROS点云与PCL点云之间的转换

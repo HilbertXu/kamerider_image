@@ -21,6 +21,9 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 find_package(PCL 1.9 REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
 #find_package(PCL 1.9 REQUIRED)
@@ -91,7 +94,6 @@ find_package(OpenCV REQUIRED)
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
 ################################################
-
 ## To declare and build dynamic reconfigure parameters within this
 ## package, follow these steps:
 ## * In the file package.xml:
@@ -108,7 +110,7 @@ find_package(OpenCV REQUIRED)
 #   cfg/DynReconf2.cfg
 # )
 
-###################################
+###################################批处理
 ## catkin specific configuration ##
 ###################################
 ## The catkin_package macro generates cmake config files for your package
