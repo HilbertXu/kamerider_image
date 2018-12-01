@@ -14,6 +14,8 @@
 	make -j8
 	sudo make install
 '
+
+
 源码安装完之后在cmakelists.txt里添加如下语句
 find_package(PCL 1.9 REQUIRED)
 然后在对每一个cpp文件编译时的target_link_libraries里加入${PCL_LIBRARIES}
@@ -66,38 +68,54 @@ PCL对ROS的接口提供了PCL数据结构的交流，通过ROS提供的以消�
 1. **ROS转PCL数据格式**
 -sensor_msgs::PointCloud2转pcl::PCLPointCloud2
 
-'pcl_conversions::toPCL (sensor_msgs::PointCloud2, pcl::PCLPointCloud2)'
+'
+cl_conversions::toPCL (sensor_msgs::PointCloud2, pcl::PCLPointCloud2)
+'
 
 -sensor_msgs::PointCloud2转pcl::PointCloud<pcl::PointXYZ>
 
-'pcl::fromROSMsg (sensor_msgs::PointCloud2, pcl::PointCloud<pcl::PointXYZ>)'
+'
+pcl::fromROSMsg (sensor_msgs::PointCloud2, pcl::PointCloud<pcl::PointXYZ>)
+'
 
 2. **PCL转ROS数据格式**
 -pcl::PCLPointCloud2转sensor_msgs::PointCloud2
 
-'pcl_conversions::fromPCL (pcl::PCLPointCloud2, sensor_msgs::PointCloud2)'
+'
+pcl_conversions::fromPCL (pcl::PCLPointCloud2, sensor_msgs::PointCloud2)
+'
 
 -pcl::PointCloud<pcl::PointXYZ>转sensor_msgs::PointCloud2
 
-'pcl::toROSMsg (pcl::PointCloud<pcl::PointXYZ>, sensor_msgs::PointCloud2)'
+'
+pcl::toROSMsg (pcl::PointCloud<pcl::PointXYZ>, sensor_msgs::PointCloud2)
+'
 
 3. **PCL中数据互转**
 -pcl::PCLPointCloud2转pcl::PointCloud<pcl::PointXYZ>
 
-'pcl::fromPCLPointCloud2(pcl::PCLPointCloud2, pcl::PointCloud<pcl::PointXYZ>)'
+'
+pcl::fromPCLPointCloud2(pcl::PCLPointCloud2, pcl::PointCloud<pcl::PointXYZ>)
+'
 
 -pcl::PointCloud<pcl::PointXYZ>转
 pcl::PCLPointCloud2
 
-'pcl::toPClPointCloud2(pcl::PointCloud<pcl::PointXYZ>, pcl::PCLPointCloud2)'
+'
+pcl::toPClPointCloud2(pcl::PointCloud<pcl::PointXYZ>, pcl::PCLPointCloud2)
+'
 
 
 ##点云的基本操作
 ###从ROS Topic中读取点云并保存为PCD文件
 注意要先将ROS Message 格式的点云数据转换成为PCL::PointCloud<pcl::PointXYZ>格式
-'pcl::fromROSMsg (sensor_msgs::PointCloud2, pcl::PointCloud<pcl::PointXYZ>)'
+'
+pcl::fromROSMsg (sensor_msgs::PointCloud2, pcl::PointCloud<pcl::PointXYZ>)
+'
 然后使用pcl的io接口进行pcd文件的写入
-'pcl::io::savePCDFileASCII(path, cloud);'
+'
+pcl::io::savePCDFileASCII(path, cloud);
+'
 
 ###从PCD文件实现点云的可视化
 '
