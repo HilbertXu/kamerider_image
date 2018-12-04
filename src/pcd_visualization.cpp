@@ -289,7 +289,7 @@ int main(int argc, char **argv)
 
 	std::cout << "Loading " << argv[1];
 	//记录读取的PCD文件的路径
-	std::string dir = "/home/kamerider/catkin_ws/src/robot_vision/pcd_files/"; 
+	std::string dir = "~/catkin_ws/src/robot_vision/pcd_files/"; 
   	std::string filename = argv[1];
 
 	//使用pcl_io端口读取PCD文件

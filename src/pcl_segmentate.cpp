@@ -46,8 +46,8 @@ typedef pcl::LCCPSegmentation<PointT>::SupervoxelAdjacencyList SupervoxelAdjacen
 
 //全局变量
 bool IF_SAVE_PCL = false;
-std::string PCD_DIR = "/home/kamerider/catkin_ws/src/robot_vision/pcd_files/";
-std::string OUTPUT_DIR = "/home/kamerider/catkin_ws/src/robot_vision/segmentation_output/";
+std::string PCD_DIR = "~/catkin_ws/src/robot_vision/pcd_files/";
+std::string OUTPUT_DIR = "~/catkin_ws/src/robot_vision/segmentation_output/";
 pcl::PointCloud<PointT> cloud_frame;//暂时储存从ROS中读取的点云数据
 pcl::PointCloud<PointT>::Ptr origin_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGBA>);
 
@@ -117,7 +117,7 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
     //超体聚类算法类似于晶体结晶的过程，设置结晶核大小，之后结晶核会通过不同块之间的凹凸关系判断
     //其中使用了两种约束条件 CC（Extended Convexity Criterion） 和 SC （Sanity criterion）
     //然后再使用LCCP(Locally Convex Connected Patches)算法进行聚类
-    //将过分割的情况转换成正常分割的情况
+    //将过分割的情况转换成正常分割的情况pcl_segmentation_with_LCCP
     pcl::SupervoxelClustering<PointT> super(voxel_resolution, seed_resolution);
     super.setUseSingleCameraTransform(use_single_cam_transform);
     super.setInputCloud(origin_cloud_ptr);  
@@ -276,7 +276,7 @@ int main(int argc, char **argv)
 
         sp_pub  = nh.advertise<std_msgs::String>("/pcl2speech", 1);
         pcl_sub = nh.subscribe("/camera/depth/points", 1, pclCallback);
-        nav_sub = nh.subscribe("/nav2pcl", 1, navCallback);
+        nav_sub = nh.subscribe("/navpcl_segmentation_with_LCCP2pcl", 1, navCallback);
 
         ros::spin();
     }
@@ -292,6 +292,8 @@ int main(int argc, char **argv)
             PCL_ERROR ("Couldn't read PCD file \n");
             return 0;
         }
+	pcl_segmentation_with_LCCP(origin_cloud_ptr);
+
     }
 
 

@@ -28,7 +28,7 @@ using namespace cv;
 
 //定义全局变量来储存接受到的点云
 pcl::PointCloud<pcl::PointXYZRGB> cloud_frame;
-string PCD_PATH = "/home/kamerider/catkin_ws/src/robot_vision/pcd_files";
+string PCD_PATH = "~/catkin_ws/src/robot_vision/pcd_files";
 
 //保存image和pcd时的计数器
 int pCount = 0;
