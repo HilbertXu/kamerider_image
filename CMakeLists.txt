@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 2.8.3)
 project(robot_vision)
 
@@ -20,15 +21,15 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   tf
 )
-find_package(PCL 1.9 REQUIRED)
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARY_DIRS})
-add_definitions(${PCL_DEFINITIONS})
+#find_package(PCL 1.9 REQUIRED)
+#include_directories(${PCL_INCLUDE_DIRS})
+#link_directories(${PCL_LIBRARY_DIRS})
+#add_definitions(${PCL_DEFINITIONS})
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
-#find_package(PCL 1.9 REQUIRED)
-#set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
-#add_definitions(${PCL_DEFINITIONS})
+find_package(PCL 1.9 REQUIRED)
+set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
+add_definitions(${PCL_DEFINITIONS})
 #include_directories(${PCL_INCLUDE_DIRS})
 #link_directories(${PCL_LIBRARY_DIRS})
 ## System dependencies are found with CMake's conventions
@@ -240,6 +241,3 @@ target_link_libraries(pcl_keypoint_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES
 
 add_executable(pcl_segmentate src/pcl_segmentate.cpp)
 target_link_libraries(pcl_segmentate ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-
-

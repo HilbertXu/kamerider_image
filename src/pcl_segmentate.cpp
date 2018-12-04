@@ -27,12 +27,16 @@ Github: https://github.com/HilbertXu/PCL_test.git
 #include <pcl/common/common_headers.h>
 #include <pcl/console/parse.h>
 #include <pcl/features/normal_3d.h>
-#include <pcl/visualization/pcl_visualizer.h> 
+#include <pcl/visualization/pcl_visualizer.h>
+
+#include <pcl/filters/passthrough.h>
 
 //点云分割有关头文件
 //分别为超体聚类和LCCP算法
 #include <pcl/segmentation/lccp_segmentation.h>
 #include <pcl/segmentation/supervoxel_clustering.h>
+
+#define Random(x) (rand() % x)
 
 using namespace std;
 using namespace pcl;
@@ -91,6 +95,22 @@ void navCallback(const std_msgs::String::ConstPtr& msg)
     }
 }
 
+void printUsage (const char* progName)
+{
+  std::cout << "\n\nUsage: rosrun robot_vision pcd_visualization <pcd file name> -[options]\n\n"
+            << "Options:\n"
+            << "-------------------------------------------\n"
+            << "-h           this help\n"
+            << "-s           Simple visualisation example\n"
+            << "-r           RGB colour visualisation example\n"
+            << "-c           Custom colour visualisation example\n"
+            << "-n           Normals visualisation example\n"
+            << "-a           Shapes visualisation example\n"
+            << "-v           Viewports example\n"
+            << "-i           Interaction Customization example\n"
+            << "\n\n";
+}
+
 void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
 {
     //算法思想是先用超体聚类方法进行一次过分割
@@ -116,7 +136,7 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
     pcl::PointCloud<pcl::PointXYZL>::Ptr over_seg = super.getLabeledCloud();
 
     //读写文件操作
-    ofstream outFile1(OUTPUT_DIR+"over_seg.txt", std::ios_base::out);
+    ofstream outFile1((OUTPUT_DIR+"over_seg.txt").c_str(), std::ios_base::out);
     for (int i=0; i<over_seg->size(); i++)
     {        
         outFile1 << over_seg->points[i].x << "\t" << over_seg->points[i].y << "\t" 
@@ -128,7 +148,7 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
     {
         if (over_seg->points[i].label > label_max1)
         {
-            label_max1 = over_seg->pointsp[i].label;
+            label_max1 = over_seg->points[i].label;
         }
     }
 
@@ -143,7 +163,7 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
         int color_G = Random(255);
         int color_B = Random(255);
 
-        for(int j=0; j < over_seg-size(); j++)
+        for(int j=0; j < over_seg->size(); j++)
         {
             if(over_seg->points[j].label == i)
             {
@@ -153,7 +173,7 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
                 //RGB
                 ColoredCloud1->points[j].r = color_R;
                 ColoredCloud1->points[j].g = color_G;
-                ColoredCloud1->points[j].B = color_B;
+                ColoredCloud1->points[j].b = color_B;
             }
         }
     }
@@ -178,7 +198,7 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
     SupervoxelAdjacencyList sv_adjacency_list;
     lccp.getSVAdjacencyList(sv_adjacency_list);
 
-    ofstream outFile2 (OUTPUT_DIR + "overSeg_merge.txt", std::ios_base::out);
+    ofstream outFile2 ((OUTPUT_DIR + "overSeg_merge.txt").c_str(), std::ios_base::out);
     for (int i=0; i < lccp_labeled_cloud->size(); i++)
     {
         outFile2 << lccp_labeled_cloud->points[i].x << "\t" << lccp_labeled_cloud->points[i].y << "\t"
@@ -223,7 +243,7 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
     //分割结果可视化
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer);
     viewer->setBackgroundColor(255,251,240);
-    viewer->setCameraPosition(0, 0, -3.0, 0, -1.0);
+    viewer->setCameraPosition(0,0,-3.0,0,-1,0);
     viewer->addCoordinateSystem(0.3);
     viewer->addPointCloud(ColoredCloud2, "lccp");
     viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 5, "lccp");
@@ -237,6 +257,12 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
 
 int main(int argc, char **argv)
 {
+    if (pcl::console::find_argument (argc, argv, "-h")>=0)
+	{
+		//argv[0]储存了当前运行程序的名称
+		printUsage(argv[0]);
+		return 0;
+	}
     if(argc < 2)
     {
         /*
