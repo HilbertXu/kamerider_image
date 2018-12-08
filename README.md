@@ -27,6 +27,10 @@ eg: target_link_libraries(pcl_segmentate ${catkin_LIBRARIES} ${OpenCV_LIBRARIES}
 
 将其中的pcl-1.7查找替换为之前安装好的pcl-1.9
 
+3. 出现一系列“未定义的应用”的错误，在查看build文件夹内部的make记录之后发现每次调用的external lib都是/usr/lib/x86_64-linux-gnu下的动态链接库，而在源码安装PCL之后，这个文件夹下的动态链接库链接的并不是pcl-1.9而是最初的pcl-1.7；可能这是问题所在
+
+http://www.cnblogs.com/oloroso/p/4688426.html
+
 
 ##ROS点云与PCL点云之间的转换
 

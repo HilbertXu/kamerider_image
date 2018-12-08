@@ -2,7 +2,7 @@
 基于LCPP(Locally Convex Connected Patches)和超体聚类算法的点云分割
 Author： Xu Yucheng
 Github: https://github.com/HilbertXu/PCL_test.git
-头文件路径：/usr/include/pcl-1.7/pcl/segmentation
+头文件路径：/usr/include/pcl-1.7pcl/segmentation
 */
 #include <ros/ros.h>
 #include <std_msgs/String.h>
@@ -33,8 +33,8 @@ Github: https://github.com/HilbertXu/PCL_test.git
 
 //点云分割有关头文件
 //分别为超体聚类和LCCP算法
-#include <pcl/segmentation/lccp_segmentation.h>
-#include <pcl/segmentation/supervoxel_clustering.h>
+#include <pcl/segmentation/impl/lccp_segmentation.hpp>
+#include <pcl/segmentation/impl/supervoxel_clustering.hpp>
 
 #define Random(x) (rand() % x)
 
@@ -46,8 +46,8 @@ typedef pcl::LCCPSegmentation<PointT>::SupervoxelAdjacencyList SupervoxelAdjacen
 
 //全局变量
 bool IF_SAVE_PCL = false;
-std::string PCD_DIR = "~/catkin_ws/src/robot_vision/pcd_files/";
-std::string OUTPUT_DIR = "~/catkin_ws/src/robot_vision/segmentation_output/";
+std::string PCD_DIR = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/";
+std::string OUTPUT_DIR = "/home/kamerider/catkin_ws/src/image_pcl/segmentation_output/";
 pcl::PointCloud<PointT> cloud_frame;//暂时储存从ROS中读取的点云数据
 pcl::PointCloud<PointT>::Ptr origin_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGBA>);
 
@@ -97,17 +97,12 @@ void navCallback(const std_msgs::String::ConstPtr& msg)
 
 void printUsage (const char* progName)
 {
-  std::cout << "\n\nUsage: rosrun robot_vision pcd_visualization <pcd file name> -[options]\n\n"
+  std::cout << "\n\nUsage: rosrun robot_vision pcl_segmentate <pcd file name> -[options]\n\n"
             << "Options:\n"
             << "-------------------------------------------\n"
-            << "-h           this help\n"
-            << "-s           Simple visualisation example\n"
-            << "-r           RGB colour visualisation example\n"
-            << "-c           Custom colour visualisation example\n"
-            << "-n           Normals visualisation example\n"
-            << "-a           Shapes visualisation example\n"
-            << "-v           Viewports example\n"
-            << "-i           Interaction Customization example\n"
+            << "-h             this help\n"
+            << "-ros           Use ROS mode, Get Point Cloud from ROS topic\n"
+            << "-pcd           Use test mode, Get Point Cloud from PCD files\n"
             << "\n\n";
 }
 
@@ -257,13 +252,16 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
 
 int main(int argc, char **argv)
 {
-    if (pcl::console::find_argument (argc, argv, "-h")>=0)
+    //从命令行中获取命令
+    std::string command = argv[2];
+
+    if (command == "-h")
 	{
 		//argv[0]储存了当前运行程序的名称
 		printUsage(argv[0]);
 		return 0;
 	}
-    if(argc < 2)
+    if(command == "-ros")
     {
         /*
         @TODO
@@ -276,13 +274,12 @@ int main(int argc, char **argv)
 
         sp_pub  = nh.advertise<std_msgs::String>("/pcl2speech", 1);
         pcl_sub = nh.subscribe("/camera/depth/points", 1, pclCallback);
-        nav_sub = nh.subscribe("/navpcl_segmentation_with_LCCP2pcl", 1, navCallback);
-
+        nav_sub = nh.subscribe("/nav2pcl", 1, navCallback);
         ros::spin();
     }
-    else
+    else if(command == "-pcd")
     {
-        std::cout << "-------------------Read PCL From PCD Files-------------------" << std::endl;
+        std::cout << "-------------------Read PCL From PCD w-------------------" << std::endl;
         std::cout << "---------------Reading " << argv[1] << " file-------------" << std::endl;
         std::string FILE_NAME = argv[1];
         std::string FULL_PATH = PCD_DIR + FILE_NAME;
@@ -292,11 +289,14 @@ int main(int argc, char **argv)
             PCL_ERROR ("Couldn't read PCD file \n");
             return 0;
         }
+
+        //在读取了PCD文件之后先剔除Nans
+        //避免后续算法调用的时候出现访问错误
+        std::vector<int> mapping;
+        pcl::removeNaNFromPointCloud(*origin_cloud_ptr, *origin_cloud_ptr, mapping);
+
 	pcl_segmentation_with_LCCP(origin_cloud_ptr);
 
     }
-
-
-    std::cout << "test lccp header" << endl;
     return 0;
 }

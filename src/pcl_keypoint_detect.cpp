@@ -9,6 +9,7 @@ Github: https://github.com/HilbertXu/PCL_test.git
 点云相关头文件/usr/include/pcl-1.7/pcl
 */
 #include <iostream>
+#include <string>
 #include <boost/thread/thread.hpp>
 #include <pcl/io/io.h> 
 #include <pcl/io/pcd_io.h>
@@ -16,7 +17,6 @@ Github: https://github.com/HilbertXu/PCL_test.git
 #include <pcl/point_types.h> 
 #include <pcl/range_image/range_image.h>
 #include <pcl/common/common_headers.h>
-#include <pcl/console/parse.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/keypoints/harris_3d.h>
 #include <pcl/keypoints/narf_keypoint.h>
@@ -43,10 +43,10 @@ void printUsage(const char* program_name)
                 << "Options:\n"
                 << "-------------------------------------------\n"
                 << "-help           this help\n"
-                << "-s           SIFT keypoint detection example\n"
-                << "-h           Harris keypoint detection example\n"
-                << "-n           NARF keypoint detection example\n"
-                << "-i           ISS keypoint detection example\n"
+                << "-s              SIFT keypoint detection example\n"
+                << "-h              Harris keypoint detection example\n"
+                << "-n              NARF keypoint detection example\n"
+                << "-i              ISS keypoint detection example\n"
                 << "\n\n";
 }
 
@@ -72,7 +72,7 @@ void HarrisKeypoint(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
     std::cout << "Successfully load Point Cloud for harris" << std::endl;
     harris.setNonMaxSupression(true);
     harris.setRadius(0.02f);//设置每次检测的半径
-    harris.setThreshold(0.01f);//设置数量阈值
+    harris.setThreshold(0.02f);//设置数量阈值
     std::cout << "Successfully set Parameters for harris " << std::endl;
 
 
@@ -217,33 +217,45 @@ void SiftKeypoint(pcl::PointCloud<pcl::PointXYZ>::ConstPtr cloud)
 
 int main(int argc, char **argv)
 {
-    if (pcl::console::find_argument (argc, argv, "-help") >=0)
+    for(int i=0; i<argc; i++)
+    {
+        cout << "argv[" << i << "]: " << argv[i] << "\n";
+        // printf("%p",argv[2]);
+    }
+
+    std::cout << endl;
+    if (argv[2] ==  "-help")
     {
         printUsage(argv[0]);
         return 0;
     }
+    /*
+     * 智能的cout会直接输出这个指针指向的内存区域中储存的数据
+     * argv[2]返回的是一个指针，直接调用的话argv[i]的值会是一个地址值
+     * 所以需要用一个string类型将argv[i]接住之后再进行比较
+     * */
+    std::string command = argv[2];
 
     bool sift(false), harris(false), narf(false), iss(false);
-
-    if (pcl::console::find_argument (argc, argv, "-s")>=0)
+    if (command ==  "-s")
     {
         sift = true;
         std::cout << "SIFT keypoint detection example" << std::endl;
     }
 
-    else if (pcl::console::find_argument (argc, argv, "-h")>=0)
+    else if (command ==  "-h")
     {
         harris = true;
         std::cout << "Harris keypoint detection example" << std::endl;
     }
 
-    else if (pcl::console::find_argument (argc, argv, "-n")>=0)
+    else if (command ==  "-n")
     {
         narf = true;
         std::cout << "NARF keypoint detection example" << std::endl;
     }
 
-    else if (pcl::console::find_argument (argc, argv, "-i")>=0)
+    else if (command ==  "-i")
     {
         iss = true;
         std::cout << "ISS keypoint detection example" << std::endl;
@@ -251,6 +263,7 @@ int main(int argc, char **argv)
 
     else 
     {
+        std::cout << "No command received " << std::endl;
         printUsage (argv[0]);
         return 0;
     }
@@ -262,7 +275,7 @@ int main(int argc, char **argv)
     pcl::PointCloud<PointXYZ>::Ptr origin_cloud_ptr (new pcl::PointCloud<pcl::PointXYZ>);
 
     //记录读取的PCD文件的路径
-	std::string dir = "~/catkin_ws/src/robot_vision/pcd_files/";
+	std::string dir = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/";
     std::string filename = argv[1];
     std::cout << "Loading " << argv[1];
    

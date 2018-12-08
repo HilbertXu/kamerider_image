@@ -19,7 +19,7 @@ int main (int argc, char** argv)
 
     std::cout << argv[1];
 
-    std::string dir = "~/catkin_ws/src/robot_vision/pcd_files/"; 
+    std::string dir = "~/catkin_ws/src/image_pcl/pcd_files/"; 
     std::string filename = argv[1]; 
 
     if (pcl::io::loadPCDFile<PointT> ((dir+filename), *cloud) == -1)

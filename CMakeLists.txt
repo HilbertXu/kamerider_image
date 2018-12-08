@@ -1,6 +1,5 @@
-
 cmake_minimum_required(VERSION 2.8.3)
-project(robot_vision)
+project(image_pcl)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,33 +7,32 @@ project(robot_vision)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+
+## System dependencies are found with CMake's conventions
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(OpenCV REQUIRED)
+
+#Find PCL required
+find_package(PCL 1.9 REQUIRED)
+set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARIES})
+add_definitions(${PCL_DEFINITIONS})
+
+
 find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   geometry_msgs
   image_transport
-  roscpp
-  rospy
   pcl_conversions
   pcl_msgs
   pcl_ros
+  roscpp
+  rospy
   sensor_msgs
   std_msgs
   tf
 )
-#find_package(PCL 1.9 REQUIRED)
-#include_directories(${PCL_INCLUDE_DIRS})
-#link_directories(${PCL_LIBRARY_DIRS})
-#add_definitions(${PCL_DEFINITIONS})
-find_package(Boost REQUIRED COMPONENTS system)
-find_package(OpenCV REQUIRED)
-find_package(PCL 1.9 REQUIRED)
-set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
-add_definitions(${PCL_DEFINITIONS})
-#include_directories(${PCL_INCLUDE_DIRS})
-#link_directories(${PCL_LIBRARY_DIRS})
-## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
-
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -89,12 +87,13 @@ add_definitions(${PCL_DEFINITIONS})
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   std_msgs
+#   geometry_msgs#   pcl_msgs#   sensor_msgs#   std_msgs
 # )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
 ################################################
+
 ## To declare and build dynamic reconfigure parameters within this
 ## package, follow these steps:
 ## * In the file package.xml:
@@ -111,7 +110,7 @@ add_definitions(${PCL_DEFINITIONS})
 #   cfg/DynReconf2.cfg
 # )
 
-###################################批处理
+###################################
 ## catkin specific configuration ##
 ###################################
 ## The catkin_package macro generates cmake config files for your package
@@ -122,8 +121,8 @@ add_definitions(${PCL_DEFINITIONS})
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES robot_vision
-#  CATKIN_DEPENDS opencv roscpp rospy std_msgs
+#  LIBRARIES image_pcl
+#  CATKIN_DEPENDS cv_bridge geometry_msgs image_transport pcl_conversions pcl_msgs pcl_ros roscpp rospy sensor_msgs std_msgs tf
 #  DEPENDS system_lib
 )
 
@@ -134,14 +133,13 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-include
+# include
   ${catkin_INCLUDE_DIRS}
-  ${PCL_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/robot_vision.cpp
+#   src/${PROJECT_NAME}/image_pcl.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -152,7 +150,7 @@ include
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/robot_vision_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/image_pcl_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -165,10 +163,36 @@ include
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-#target_link_libraries(${PROJECT_NAME}_node
+# target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
-#   ${PCL_LIBRARIES}
 # )
+
+add_executable(get_position src/get_position.cpp)
+target_link_libraries(get_position ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(pcl_dataFormat src/pcl_dataFormat.cpp)
+target_link_libraries(pcl_dataFormat ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(pcl_withFilter src/pcl_withFilter.cpp)
+target_link_libraries(pcl_withFilter ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(save_pcl_as_pcd src/save_pcl_as_pcd.cpp)
+target_link_libraries(save_pcl_as_pcd ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+#add_executable(pcd_visualization src/pcd_visualization.cpp)
+#target_link_libraries(pcd_visualization ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(pcd_simple_viewer src/pcd_simple_viewer.cpp)
+target_link_libraries(pcd_simple_viewer ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(pcl_keypoint_detect src/pcl_keypoint_detect.cpp)
+target_link_libraries(pcl_keypoint_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(pcl_segmentate src/pcl_segmentate.cpp)
+target_link_libraries(pcl_segmentate ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(pcl_supervoxel src/pcl_supervoxel.cpp)
+target_link_libraries(pcl_supervoxel ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 #############
 ## Install ##
@@ -210,34 +234,10 @@ include
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_robot_vision.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_image_pcl.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-
-add_executable(get_position src/get_position.cpp)
-target_link_libraries(get_position ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_dataFormat src/pcl_dataFormat.cpp)
-target_link_libraries(pcl_dataFormat ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_withFilter src/pcl_withFilter.cpp)
-target_link_libraries(pcl_withFilter ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(save_pcl_as_pcd src/save_pcl_as_pcd.cpp)
-target_link_libraries(save_pcl_as_pcd ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcd_visualization src/pcd_visualization.cpp)
-target_link_libraries(pcd_visualization ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcd_simple_viewer src/pcd_simple_viewer.cpp)
-target_link_libraries(pcd_simple_viewer ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_keypoint_detect src/pcl_keypoint_detect.cpp)
-target_link_libraries(pcl_keypoint_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_segmentate src/pcl_segmentate.cpp)
-target_link_libraries(pcl_segmentate ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
