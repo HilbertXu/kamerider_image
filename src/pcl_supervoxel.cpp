@@ -23,6 +23,10 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/range_image/range_image.h>
+#include <pcl/common/common_headers.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/filters/passthrough.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/segmentation/impl/supervoxel_clustering.hpp>
 #include <pcl/segmentation/impl/lccp_segmentation.hpp>
@@ -30,12 +34,12 @@
 //VTK include to draw graph lines
 #include <vtkPolyLine.h>
 
-#typedef pcl::PointXYZRGBA PointT;
-#typedef pcl::PointCloud<PointT> PointCloudT;
-#typedef pcl::PointNormal PointNT;
-#typedef pcl::PointCloud<PointNT> PointCloudNT;
-#typedef pcl::PointXYZL PointLT;
-#typedef pcl::PointCloud<PointLT> PoinrCloudLT;
+typedef pcl::PointXYZRGBA PointT;
+typedef pcl::PointCloud<PointT> PointCloudT;
+typedef pcl::PointNormal PointNT;
+typedef pcl::PointCloud<PointNT> PointCloudNT;
+typedef pcl::PointXYZL PointLT;
+typedef pcl::PointCloud<PointLT> PointCloudLT;
 
 std::string PCD_DIR    = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/";
 std::string SEG_OUTPUT = "/home/kamerider/catkin_ws/src/image_pcl/segmentation_output/"; 
@@ -47,6 +51,8 @@ using namespace pcl;
 //点云容器
 PointCloudT cloud_frame;//暂时储存从ROS中读取的点云数据
 PointCloudT::Ptr origin_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGBA>);
+
+bool IF_SAVE_PCL = false;
 
 //ROS系统下的订阅器和发布器
 ros::Publisher  sp_pub;
@@ -61,6 +67,36 @@ float spatial_importance = 0.4f;
 float normal_importance  = 1.0f;
 
 
+void addSupervoxelConnectionsToViewer (PointT &supervoxel_center,
+                                  PointCloudT &adjacent_supervoxel_centers,
+                                  std::string supervoxel_name,
+                                  boost::shared_ptr<pcl::visualization::PCLVisualizer> & viewer)
+{
+    vtkSmartPointer<vtkPoints> points = vtkSmartPointer<vtkPoints>::New ();
+    vtkSmartPointer<vtkCellArray> cells = vtkSmartPointer<vtkCellArray>::New ();
+    vtkSmartPointer<vtkPolyLine> polyLine = vtkSmartPointer<vtkPolyLine>::New ();
+
+    //Iterate through all adjacent points, and add a center point to adjacent point pair
+    PointCloudT::iterator adjacent_itr = adjacent_supervoxel_centers.begin ();
+    for ( ; adjacent_itr != adjacent_supervoxel_centers.end (); ++adjacent_itr)
+    {
+        points->InsertNextPoint (supervoxel_center.data);
+        points->InsertNextPoint (adjacent_itr->data);
+    }
+    // Create a polydata to store everything in
+    vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New ();
+    // Add the points to the dataset
+    polyData->SetPoints (points);
+    polyLine->GetPointIds  ()->SetNumberOfIds(points->GetNumberOfPoints ());
+    for(unsigned int i = 0; i < points->GetNumberOfPoints (); i++)
+    {
+        polyLine->GetPointIds ()->SetId (i,i);
+    }
+    cells->InsertNextCell (polyLine);
+    // Add the lines to the dataset
+    polyData->SetLines (cells);
+    viewer->addModelFromPolyData (polyData,supervoxel_name);
+}
 
 void SuperVoxelSegmentation(PointCloudT::Ptr cloud)
 {
@@ -112,7 +148,7 @@ void SuperVoxelSegmentation(PointCloudT::Ptr cloud)
 
         //遍历每个超体的邻近，然后生成点云
         PointCloudT adjacency_supervoxel_centers;
-        std::multimap<uint_32 uint_32>::iterator adjacent_itr = supervoxel_adjacency.equal_range (supervoxel_label).first;
+        std::multimap<uint32_t, uint32_t>::iterator adjacent_itr = supervoxel_adjacency.equal_range (supervoxel_label).first;
         
         //开始遍历
         for( ; adjacent_itr != supervoxel_adjacency.equal_range (supervoxel_label).second; ++adjacent_itr)
@@ -120,12 +156,17 @@ void SuperVoxelSegmentation(PointCloudT::Ptr cloud)
             pcl::Supervoxel<PointT>::Ptr neighbor_supervoxel = supervoxel_clusters.at (adjacent_itr->second);
             adjacency_supervoxel_centers.push_back (neighbor_supervoxel->centroid_);
         }
-
         
+        std::stringstream ss;
+        ss << "supervoxel_" << supervoxel_label;
+        addSupervoxelConnectionsToViewer (supervoxel->centroid_,adjacency_supervoxel_centers, ss.str(), viewer);
+
+       label_itr = supervoxel_adjacency.upper_bound (supervoxel_label);
     }
-
-
-
+    while (!viewer->wasStopped ())
+    {
+        viewer->spinOnce (100);
+    }
 }
 
 //ROS端回调函数的声明
@@ -167,6 +208,7 @@ void printUsage(const char* program_name)
 
 int main(int argc, char** argv)
 {
+    std::string command = argv[2];
     if (argc < 2)
     {
         printUsage(argv[0]);
@@ -214,6 +256,7 @@ int main(int argc, char** argv)
         //避免后续算法调用的时候出现访问错误
         std::vector<int> mapping;
         pcl::removeNaNFromPointCloud(*origin_cloud_ptr, *origin_cloud_ptr, mapping);
+        SuperVoxelSegmentation (origin_cloud_ptr);
 
     }
         

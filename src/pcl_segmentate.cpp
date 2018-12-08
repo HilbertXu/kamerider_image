@@ -28,7 +28,10 @@ Github: https://github.com/HilbertXu/PCL_test.git
 #include <pcl/console/parse.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/visualization/cloud_viewer.h>
 
+//体素网格采样
+#include <pcl_ros/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
 
 //点云分割有关头文件
@@ -50,6 +53,7 @@ std::string PCD_DIR = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/";
 std::string OUTPUT_DIR = "/home/kamerider/catkin_ws/src/image_pcl/segmentation_output/";
 pcl::PointCloud<PointT> cloud_frame;//暂时储存从ROS中读取的点云数据
 pcl::PointCloud<PointT>::Ptr origin_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGBA>);
+pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud_ptr (new pcl::PointCloud<pcl::PointXYZI>);
 
 //使用Supervoxel时的参数
 float voxel_resolution = 0.3f;
@@ -294,6 +298,23 @@ int main(int argc, char **argv)
         //避免后续算法调用的时候出现访问错误
         std::vector<int> mapping;
         pcl::removeNaNFromPointCloud(*origin_cloud_ptr, *origin_cloud_ptr, mapping);
+
+        /*
+        对点云进行体素滤波下采样
+        */
+        std::cout << "Using VoxelGrid Filter" << std::endl;
+        pcl::PointCloud<pcl::PointXYZI>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+        pcl::copyPointCloud (*origin_cloud_ptr, *temp_cloud);
+        pcl::VoxelGrid<pcl::PointXYZI> sor;
+        sor.setInputCloud (temp_cloud);
+        sor.setLeafSize (0.01f, 0.01f, 0.01f);
+        sor.filter(*filtered_cloud_ptr); 
+
+        //pcl::visualization::CloudViewer filter_viewer("Cloud Viewer");
+        //filter_viewer.showCloud(filtered_cloud_ptr);
+
+        pcl::copyPointCloud (*filtered_cloud_ptr, *origin_cloud_ptr);
+
 
 	pcl_segmentation_with_LCCP(origin_cloud_ptr);
 
