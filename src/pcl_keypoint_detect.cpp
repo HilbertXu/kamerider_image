@@ -39,7 +39,7 @@ bool setUnseenToMaxRange = false; //是否将所有不可见的点 看作 最大
 
 void printUsage(const char* program_name)
 {
-    std::cout << "\n\nUsage: rosrun robot_vision pcl_keypoint_detect <pcd file name> -[options]\n\n"
+    std::cout << "\n\nUsage: rosrun robot_vision pcl_keypoint_detect -[options] <pcd file name> \n\n"
                 << "Options:\n"
                 << "-------------------------------------------\n"
                 << "-help           this help\n"
@@ -234,7 +234,7 @@ int main(int argc, char **argv)
      * argv[2]返回的是一个指针，直接调用的话argv[i]的值会是一个地址值
      * 所以需要用一个string类型将argv[i]接住之后再进行比较
      * */
-    std::string command = argv[2];
+    std::string command = argv[1];
 
     bool sift(false), harris(false), narf(false), iss(false);
     if (command ==  "-s")
@@ -276,8 +276,8 @@ int main(int argc, char **argv)
 
     //记录读取的PCD文件的路径
 	std::string dir = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/";
-    std::string filename = argv[1];
-    std::cout << "Loading " << argv[1];
+    std::string filename = argv[2];
+    std::cout << "Loading " << argv[2];
    
 
     if (pcl::io::loadPCDFile<PointXYZ> ((dir + filename), *origin_cloud_ptr) == -1)

@@ -228,7 +228,10 @@ void mouseEventOccurred (const pcl::visualization::MouseEvent &event,
 //最基础的点云可视化操作
 int main(int argc, char **argv)
 {
-	if (pcl::console::find_argument (argc, argv, "-h")>=0)
+
+	std::string command = argv[1];
+
+	if (command == "-h")
 	{
 		//argv[0]储存了当前运行程序的名称
 		printUsage(argv[0]);
@@ -239,37 +242,37 @@ int main(int argc, char **argv)
     shapes(false), viewports(false);
 
 	//读取控制台中输入的控制参数，完成不同的操作
-	if (pcl::console::find_argument (argc, argv, "-s") >=0)
+	if (command == "-s")
 	{
 		simple = true;
 		std::cout << "Simple visulization example" << endl;
 	}
 
-	else if (pcl::console::find_argument (argc, argv, "-r") >=0)
+	else if (command == "-r")
 	{
 		rgb = true;
 		std::cout << "RGB color visulization example" << endl;
 	}
 
-	else if (pcl::console::find_argument (argc, argv, "-c") >=0)
+	else if (command == "-c")
 	{
 		custom_c = true;
 		std::cout << "Custom color visualization example" << endl;
 	}
 
-	else if (pcl::console::find_argument (argc, argv, "-n") >=0)
+	else if (command == "-n")
 	{
 		normals = true;
 		std::cout << "Normals visualization example" << endl;
 	}
 
-	else if (pcl::console::find_argument (argc, argv, "-a") >=0)
+	else if (command == "-a")
 	{
 		shapes = true;
 		std::cout << "Shapes visualization example" << endl;
 	}
 
-	else if (pcl::console::find_argument (argc, argv, "-v") >=0)
+	else if (command == "-v")
 	{
 		viewports = true;
 		std::cout << "Viewports example" << endl;
@@ -287,10 +290,10 @@ int main(int argc, char **argv)
 	pcl::PointCloud<PointXYZ>::Ptr basic_cloud_ptr (new pcl::PointCloud<PointXYZ>);
 	pcl::PointCloud<PointT>::Ptr point_cloud_ptr (new pcl::PointCloud<PointT>);
 
-	std::cout << "Loading " << argv[1];
+	std::cout << "Loading " << argv[2];
 	//记录读取的PCD文件的路径
 	std::string dir = "~/catkin_ws/src/image_pcl/pcd_files/"; 
-  	std::string filename = argv[1];
+  	std::string filename = argv[2];
 
 	//使用pcl_io端口读取PCD文件
 	pcl::io::loadPCDFile<PointT> ((dir+filename), *point_cloud_ptr);

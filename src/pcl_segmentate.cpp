@@ -58,7 +58,7 @@ pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud_ptr (new pcl::PointCloud<pcl
 //使用Supervoxel时的参数
 float voxel_resolution = 0.008f;
 float seed_resolution = 0.1f;
-float color_importance = 0.2f;
+float color_importance = 0.0f;
 float spatial_importance = 0.4f;
 float normal_importance = 1.0f;
 bool use_single_cam_transform = false;
@@ -101,7 +101,7 @@ void navCallback(const std_msgs::String::ConstPtr& msg)
 
 void printUsage (const char* progName)
 {
-  std::cout << "\n\nUsage: rosrun robot_vision pcl_segmentate <pcd file name> -[options]\n\n"
+  std::cout << "\n\nUsage: rosrun robot_vision pcl_segmentate -[options] <pcd file name> \n\n"
             << "Options:\n"
             << "-------------------------------------------\n"
             << "-h             this help\n"
@@ -257,7 +257,7 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
 int main(int argc, char **argv)
 {
     //从命令行中获取命令
-    std::string command = argv[2];
+    std::string command = argv[1];
 
     if (command == "-h")
 	{
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
     {
         std::cout << "-------------------Read PCL From PCD-------------------" << std::endl;
         std::cout << "---------------Reading " << argv[1] << " file-------------" << std::endl;
-        std::string FILE_NAME = argv[1];
+        std::string FILE_NAME = argv[2];
         std::string FULL_PATH = PCD_DIR + FILE_NAME;
 
         if (pcl::io::loadPCDFile<PointXYZRGBA> (FULL_PATH, *origin_cloud_ptr) == -1)
