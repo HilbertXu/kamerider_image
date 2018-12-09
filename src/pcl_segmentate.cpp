@@ -56,11 +56,11 @@ pcl::PointCloud<PointT>::Ptr origin_cloud_ptr (new pcl::PointCloud<pcl::PointXYZ
 pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud_ptr (new pcl::PointCloud<pcl::PointXYZI>);
 
 //使用Supervoxel时的参数
-float voxel_resolution = 0.3f;
-float seed_resolution = 1.2f;
-float color_importance = 0.0f;
-float spatial_importance = 1.0f;
-float normal_importance = 0.0f;
+float voxel_resolution = 0.008f;
+float seed_resolution = 0.1f;
+float color_importance = 0.2f;
+float spatial_importance = 0.4f;
+float normal_importance = 1.0f;
 bool use_single_cam_transform = false;
 bool use_supervoxel_refinement = false;
 unsigned int k_factor = 0;
@@ -150,7 +150,7 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
             label_max1 = over_seg->points[i].label;
         }
     }
-
+    std::cout << "There is " << label_max1 << " labels in PointCloud" << std::endl;
     //对点云进行染色，区分第一次过分割分割的结果
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr ColoredCloud1(new pcl::PointCloud<pcl::PointXYZRGB>);
     ColoredCloud1->height = 1;
@@ -283,7 +283,7 @@ int main(int argc, char **argv)
     }
     else if(command == "-pcd")
     {
-        std::cout << "-------------------Read PCL From PCD w-------------------" << std::endl;
+        std::cout << "-------------------Read PCL From PCD-------------------" << std::endl;
         std::cout << "---------------Reading " << argv[1] << " file-------------" << std::endl;
         std::string FILE_NAME = argv[1];
         std::string FULL_PATH = PCD_DIR + FILE_NAME;
