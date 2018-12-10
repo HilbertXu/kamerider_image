@@ -39,7 +39,7 @@ bool setUnseenToMaxRange = false; //是否将所有不可见的点 看作 最大
 
 void printUsage(const char* program_name)
 {
-    std::cout << "\n\nUsage: rosrun robot_vision pcl_keypoint_detect -[options] <pcd file name> \n\n"
+    std::cout << "\n\nUsage: rosrun image_pcl pcl_keypoint_detect -[options] <pcd file name> \n\n"
                 << "Options:\n"
                 << "-------------------------------------------\n"
                 << "-help           this help\n"

@@ -3,10 +3,17 @@
 #include <boost/thread/thread.hpp>
 #include <pcl/common/common_headers.h>
 #include <pcl/features/normal_3d.h>
-#include <pcl/console/parse.h>
-#include <pcl/io/pcd_io.h> 
+#include <pcl/io/io.h> 
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_cloud.h>
 #include <pcl/point_types.h> 
-#include <pcl/visualization/pcl_visualizer.h> 
+#include <pcl/range_image/range_image.h>
+#include <pcl/console/parse.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/visualization/cloud_viewer.h>
+
+//体素网格采样
+#include <pcl_ros/filters/voxel_grid.h>
 using namespace std; 
 using namespace pcl;
 
@@ -41,6 +48,24 @@ int main (int argc, char** argv)
     cloud->points[i].b, 
     cloud->points[i].a 
     ); 
+
+    //增加剔除Nans点以及点云滤波部分
+    //在读取了PCD文件之后先剔除Nans
+    //避免后续算法调用的时候出现访问错误
+    std::vector<int> mapping;
+    pcl::removeNaNFromPointCloud(*cloud, *cloud, mapping);
+
+    /*
+    取消注释以实现对点云进行体素滤波下采样
+    
+    std::cout << "Using VoxelGrid Filter" << std::endl;
+    pcl::PointCloud<pcl::PointXYZI>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZI>);
+    pcl::copyPointCloud (*origin_cloud_ptr, *temp_cloud);
+    pcl::VoxelGrid<pcl::PointXYZI> sor;
+    sor.setInputCloud (temp_cloud);
+    sor.setLeafSize (0.01f, 0.01f, 0.01f);
+    sor.filter(*filtered_cloud_ptr); 
+    */
 
     pcl::visualization::PCLVisualizer viewer("Cloud viewer"); 
     viewer.setBackgroundColor(255,251,240);

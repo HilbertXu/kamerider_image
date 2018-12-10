@@ -51,14 +51,13 @@ typedef pcl::LCCPSegmentation<PointT>::SupervoxelAdjacencyList SupervoxelAdjacen
 bool IF_SAVE_PCL = false;
 std::string PCD_DIR = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/";
 std::string OUTPUT_DIR = "/home/kamerider/catkin_ws/src/image_pcl/segmentation_output/";
-pcl::PointCloud<PointT> cloud_frame;//暂时储存从ROS中读取的点云数据
 pcl::PointCloud<PointT>::Ptr origin_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGBA>);
 pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud_ptr (new pcl::PointCloud<pcl::PointXYZI>);
 
 //使用Supervoxel时的参数
 float voxel_resolution = 0.008f;
 float seed_resolution = 0.1f;
-float color_importance = 0.0f;
+float color_importance = 0.2f;
 float spatial_importance = 0.4f;
 float normal_importance = 1.0f;
 bool use_single_cam_transform = false;
@@ -83,8 +82,7 @@ void pclCallback(const sensor_msgs::PointCloud2& msg)
     {
         //对容器中点云进行复制
         //使用从ROS类型到PCL类型的转换函数
-        pcl::fromROSMsg(msg, cloud_frame);
-        *origin_cloud_ptr = cloud_frame;
+        pcl::fromROSMsg(msg, *origin_cloud_ptr);
         IF_SAVE_PCL = false;
     }
 
@@ -101,7 +99,7 @@ void navCallback(const std_msgs::String::ConstPtr& msg)
 
 void printUsage (const char* progName)
 {
-  std::cout << "\n\nUsage: rosrun robot_vision pcl_segmentate -[options] <pcd file name> \n\n"
+  std::cout << "\n\nUsage: rosrun image_pcl pcl_segmentate -[options] <pcd file name> \n\n"
             << "Options:\n"
             << "-------------------------------------------\n"
             << "-h             this help\n"

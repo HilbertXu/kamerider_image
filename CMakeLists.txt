@@ -194,6 +194,9 @@ target_link_libraries(pcl_segmentate ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${P
 add_executable(pcl_supervoxel src/pcl_supervoxel.cpp)
 target_link_libraries(pcl_supervoxel ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
+add_executable(pcl_rgb_merge src/pcl_rgb_merge.cpp)
+target_link_libraries(pcl_rgb_merge ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
 #############
 ## Install ##
 #############

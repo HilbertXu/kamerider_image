@@ -13,11 +13,18 @@
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
+
+#include <boost/thread/thread.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
+#include <pcl/common/common_headers.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/console/parse.h>
 
 //filter file
 //体素网格采样
@@ -27,8 +34,11 @@ using namespace std;
 using namespace cv;
 
 //定义全局变量来储存接受到的点云
-pcl::PointCloud<pcl::PointXYZRGB> cloud_frame;
-string PCD_PATH = "~/catkin_ws/src/image_pcl/pcd_files";
+pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_frame (new pcl::PointCloud<pcl::PointXYZ>);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb (new pcl::PointCloud<pcl::PointXYZRGB>);
+string PCD_PATH = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files";
+string PCL_TOPIC_NAME;
+string RGB_TOPIC_NAME;
 
 //保存image和pcd时的计数器
 int pCount = 0;
@@ -37,6 +47,13 @@ int pCount = 0;
 //定义订阅器和发布器
 ros::Subscriber pcl_sub;
 ros::Subscriber img_sub;
+
+void printUsage(const char* name)
+{
+
+  std::cout << "\n\nUsage: rosrun image_pcl save_pcl_as_pcd [PCL_TOPIC_NAME] [RGB_TOPIC_NAME] \n\n"
+            << "\n\n";
+}
 
 string int2str(int &int_temp)
 {
@@ -49,18 +66,31 @@ string int2str(int &int_temp)
 
 void writePCD(string path)
 {
-    pcl::io::savePCDFileASCII(path, cloud_frame);
+    pcl::io::savePCDFileASCII(path, *cloud_rgb);
     std::cout << "PointCloude data has been writen to " << path << std::endl;
+
+    //添加可视化模块，每次保存之后显示当前保存的点云
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer);
+    viewer->setBackgroundColor(255,251,240);
+    viewer->setCameraPosition(0,0,-3.0,0,-1,0);
+    viewer->addCoordinateSystem(0.3);
+    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(cloud_rgb);
+    viewer->addPointCloud(cloud_rgb, rgb, "point_cloud");
+    //viewer->setPointCloudRenderingProperties(pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 1, "point_cloud");
+
+    while (!viewer->wasStopped())
+    {
+        viewer->spinOnce(100);
+        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+    }
 }
 
 void pclCallback(const sensor_msgs::PointCloud2& msg)
 {
     //对容器中点云进行复制
     //使用从ROS类型到PCL类型的转换函数
-    pcl::fromROSMsg(msg, cloud_frame);
-
+    pcl::fromROSMsg(msg, *cloud_frame);
 }
-
 /*
 @TODO
 将按下‘s’键保存当前RGB图片和点云数据修改成为
@@ -78,22 +108,47 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     if(key == 's')//按下s键将当前点云数据保存到pcd文件中
     {
         pCount++;
-
-        ROS_INFO("Writing PCD files");
         string num = int2str(pCount);
-        string pcd_path = PCD_PATH + "/" + num + ".pcd";
-        writePCD(pcd_path);
 
         string img_path = PCD_PATH + "/" + num + ".png";
-
         ROS_INFO("Writing RGB image");
         cv::imwrite(img_path, img);
+        
+        //将当前点云赋予RGB值之后再保存为PCD文件
+        pcl::PointXYZRGB temp_point;
+
+        for (int m = 0; m<img.rows; m++)
+        {
+            for (int n = 0; n<img.cols; n++)
+            {
+                temp_point.b = img.ptr<uchar>(m,n)[0];
+                temp_point.g = img.ptr<uchar>(m,n)[1];
+                temp_point.r = img.ptr<uchar>(m,n)[2];
+
+                //取得深度数据
+                temp_point.x = cloud_frame->points[m*img.cols+n].x;
+                temp_point.y = cloud_frame->points[m*img.cols+n].y;
+                temp_point.z = cloud_frame->points[m*img.cols+n].z;
+                cloud_rgb->push_back(temp_point);
+            }
+        }
+        ROS_INFO("Writing PCD files");
+        string pcd_path = PCD_PATH + "/" + num + ".pcd";
+        writePCD(pcd_path);
     }
 
 }
 
 int main(int argc, char **argv)
 {
+    //if (argc < 3)
+    //{
+    //    printUsage(argv[0]);
+    //    return 0;
+    //}
+
+    //PCL_TOPIC_NAME = argv[1];
+    //RGB_TOPIC_NAME = argv[2];
     ros::init(argc, argv, "save_pcl_as_pcd");
     ros::NodeHandle nh;
 
