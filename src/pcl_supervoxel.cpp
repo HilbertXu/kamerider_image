@@ -208,7 +208,7 @@ void printUsage(const char* program_name)
 
 int main(int argc, char** argv)
 {
-    std::string command = argv[2];
+    std::string command = argv[1];
     if (argc < 2)
     {
         printUsage(argv[0]);
@@ -243,7 +243,7 @@ int main(int argc, char** argv)
     {
         std::cout << "-------------------Read PCL From PCD Files-------------------" << std::endl;
         std::cout << "---------------Reading " << argv[1] << " file-------------" << std::endl;
-        std::string FILE_NAME = argv[1];
+        std::string FILE_NAME = argv[2];
         std::string FULL_PATH = PCD_DIR + FILE_NAME;
 
         if (pcl::io::loadPCDFile<PointXYZRGBA> (FULL_PATH, *origin_cloud_ptr) == -1)
