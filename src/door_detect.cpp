@@ -52,8 +52,8 @@ using namespace pcl;
 以及："if the door is opened please say 'Jack the door is open'"
 语音识别'Jack'以及'open'关键词后向这个节点发布消息"door_open"
 */
-//ros::Publisher door_pub;
-//ros::Subscriber speech_sub;
+ros::Publisher door_pub;
+ros::Subscriber speech_sub;
 ros::Subscriber pcl_sub;
 ros::Subscriber rgb_sub;
 
@@ -180,8 +180,8 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "door_detect");
     ros::NodeHandle nh;
 
-    //door_pub   = nh.advertise<std_msgs::String>("/pcl2nav", 1);
-    //speech_sub = nh.subscribe("/speech2pcl", 1, speechCallback);
+    door_pub   = nh.advertise<std_msgs::String>("/pcl2nav", 1);
+    speech_sub = nh.subscribe("/speech2pcl", 1, speechCallback);
     pcl_sub = nh.subscribe("/camera/depth/points", 1, pclCallback);
     rgb_sub = nh.subscribe("/image_raw", 1, imageCallback);
 
