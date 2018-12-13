@@ -77,7 +77,7 @@ int main (int argc, char** argv)
     //viewer.addPointCloud(cloud, single_color); 
     viewer.addPointCloud(cloud);
     while(!viewer.wasStopped()) 
-    viewer.spinOnce(100); 
+        viewer.spinOnce(100); 
     return (0); 
 } 
 

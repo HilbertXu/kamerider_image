@@ -203,6 +203,12 @@ target_link_libraries(door_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_
 add_executable(bar_detect src/bar_detect.cpp)
 target_link_libraries(bar_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
+add_executable(pcl_PMF src/pcl_PMF.cpp)
+target_link_libraries(pcl_PMF ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(pcl_ransac src/pcl_ransac.cpp)
+target_link_libraries(pcl_ransac ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
 #############
 ## Install ##
 #############
