@@ -56,16 +56,16 @@ ros::Publisher  turn_robot;
 ros::Publisher  obj_pub;
 ros::Publisher  speech_pub;
 
-void adjustRobotOrientation(float goal_angle);
+void adjustRobotOrientation (float goal_angle);
 
 std::string object_name;
-void speechCallback( coonst std_msgs::String::ConstPtr& msg)
+void speechCallback (const std_msgs::String::ConstPtr& msg)
 {
     //从语音节点处获取到要取的物品的名称
     object_name = msg->data;
 }
 
-void navCallback(const std_msgs::String::ConstPtr& msg)
+void navCallback (const std_msgs::String::ConstPtr& msg)
 {
     if (msg->data == "in_position")
     {
@@ -115,7 +115,7 @@ void navCallback(const std_msgs::String::ConstPtr& msg)
     }
 }
 
-void darknetCallback(darknet_ros_msgs::BoundingBoxes msg)
+void darknetCallback (darknet_ros_msgs::BoundingBoxes msg)
 {
     //找到要抓取物体的B-box
     int idx = 0;
@@ -134,3 +134,5 @@ void darknetCallback(darknet_ros_msgs::BoundingBoxes msg)
         }
     }
 }
+
+void pclCallback (sensor_msgs::PointCloud2 msg);
