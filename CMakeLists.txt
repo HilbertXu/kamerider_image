@@ -200,6 +200,9 @@ target_link_libraries(pcl_rgb_merge ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PC
 add_executable(door_detect src/door_detect.cpp)
 target_link_libraries(door_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
+add_executable(bar_detect src/bar_detect.cpp)
+target_link_libraries(bar_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
 #############
 ## Install ##
 #############

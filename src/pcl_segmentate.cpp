@@ -175,7 +175,7 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
         }
     }
     
-	pcl::io::savePCDFileASCII(PCD_DIR + "over_seg.pcd", *ColoredCloud1);
+	pcl::io::savePCDFileASCII(OUTPUT_DIR + "over_seg.pcd", *ColoredCloud1);
 
     //LCCP分割
     PCL_INFO ("Start Segmentation\n");
@@ -235,7 +235,7 @@ void pcl_segmentation_with_LCCP(pcl::PointCloud<PointT>::Ptr cloud)
 			}
 		}
     }
-    pcl::io::savePCDFileASCII (PCD_DIR + "overSeg_merge.pcd", *ColoredCloud2);
+    pcl::io::savePCDFileASCII (OUTPUT_DIR + "overSeg_merge.pcd", *ColoredCloud2);
 
     //分割结果可视化
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer(new pcl::visualization::PCLVisualizer);

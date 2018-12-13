@@ -101,6 +101,14 @@ void pclCallback(const sensor_msgs::PointCloud2& msg)
     std::cout << num << std::endl;
 }
 
+void speechCallback (const std_msgs::StringConstPtr& msg)
+{
+    /*
+    @TODO
+    此处根据需要添加对来自语音节点的信息的处理
+    */
+}
+
 void imageCallback(const sensor_msgs::ImageConstPtr& msg)
 {
     cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
@@ -138,6 +146,12 @@ void imageCallback(const sensor_msgs::ImageConstPtr& msg)
         }
         std::string PCD_FULL_PATH = PCD_DIR + FILE_NAME + ".pcd";
         pcl::io::savePCDFileASCII(PCD_FULL_PATH, *cloud_rgb);
+
+        //向语音节点发送"door_closed"信息
+        std_msgs::String door_flag;
+        door_flag.data = "door_closed";
+        door_pub.publish(door_flag);
+
         door_closed = false;
     }
     else if (door_opened && step==2)

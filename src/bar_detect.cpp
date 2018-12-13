@@ -36,7 +36,7 @@ void init()
 {
 	cout<<"INIT..........................."<<endl;
 	bar_pub = nh.advertise<std_msgs::String> ("/barplace", 10);
-	image_sub = nh.subscribe<sensor_msgs::PointCloud2> ("/kinect/depth/points", 10, &DetectBar::cloud_Cb, this);
+	image_sub = nh.subscribe<sensor_msgs::PointCloud2> ("/camera/depth/points", 10, &DetectBar::cloud_Cb, this);
 	turn_sub = nh.subscribe ("/turnleft", 10, &DetectBar::turnleft_cb, this);
 }
 void turnleft_cb (const std_msgs::String& msg)
@@ -84,9 +84,11 @@ void cloud_Cb (const sensor_msgs::PointCloud2ConstPtr& input)  //特别注意的
 		_enable = 0;
 		
 		string str = (orient == 0 ? "cloud_left.png" : "cloud_right.png");
+        std::string DIR = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/";
+        std::string FULL_PATH = DIR + str;
 		pcl::PointCloud<pcl::PointXYZRGB>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
 		pcl::fromPCLPointCloud2(*cloud, *temp_cloud);
-		pcl::io::savePNGFile(str, *temp_cloud, "rgb");
+		pcl::io::savePNGFile(FULL_PATH, *temp_cloud, "rgb");
 	}
 	if(orient == 3)
 	{
@@ -113,3 +115,4 @@ int main (int argc, char** argv)
   ros::spin ();
   //exit(0);
   return 0;
+}
