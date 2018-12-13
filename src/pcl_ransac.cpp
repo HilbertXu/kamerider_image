@@ -66,7 +66,7 @@ int main (int argc, char** argv)
     std::cerr << *cloud_filtered << std::endl;
  
     pcl::PCDWriter writer;
-    writer.write<pcl::PointXYZ> ((PCD_DIR + "3dpoints_ground.pcd"), *cloud_filtered, false);
+    writer.write<pcl::PointXYZ> ((PCD_DIR + "ransac_seg_ground.pcd"), *cloud_filtered, false);
  
     // 提取除地面外的物体
     extract.setNegative (true);
@@ -75,7 +75,7 @@ int main (int argc, char** argv)
     std::cerr << "Object cloud after filtering: " << std::endl;
     std::cerr << *cloud_filtered << std::endl;
  
-    writer.write<pcl::PointXYZ> ((PCD_DIR + "3dpoints_object.pcd"), *cloud_filtered, false);
+    writer.write<pcl::PointXYZ> ((PCD_DIR + "ransac_seg_object.pcd"), *cloud_filtered, false);
  
     // 点云可视化
     pcl::visualization::PCLVisualizer viewer("Filtered");
