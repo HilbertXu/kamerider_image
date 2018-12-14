@@ -21,6 +21,7 @@ add_definitions(${PCL_DEFINITIONS})
 
 
 find_package(catkin REQUIRED COMPONENTS
+  message_generation
   cv_bridge
   geometry_msgs
   image_transport
@@ -64,12 +65,14 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
-
+add_message_files(
+   FILES
+   object_position.msg
+)
+generate_messages(
+  DEPENDENCIES
+    std_msgs
+)
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
@@ -120,10 +123,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES image_pcl
-#  CATKIN_DEPENDS cv_bridge geometry_msgs image_transport pcl_conversions pcl_msgs pcl_ros roscpp rospy sensor_msgs std_msgs tf
-#  DEPENDS system_lib
+  INCLUDE_DIRS include
+  LIBRARIES image_pcl
+  CATKIN_DEPENDS cv_bridge geometry_msgs image_transport pcl_conversions pcl_msgs pcl_ros roscpp rospy sensor_msgs std_msgs tf message_runtime
+  DEPENDS system_lib
 )
 
 ###########
@@ -208,6 +211,9 @@ target_link_libraries(pcl_PMF ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBR
 
 add_executable(pcl_ransac src/pcl_ransac.cpp)
 target_link_libraries(pcl_ransac ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(find_object src/find_object.cpp)
+target_link_libraries(find_object ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 #############
 ## Install ##
