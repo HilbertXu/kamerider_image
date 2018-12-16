@@ -41,15 +41,20 @@ Author: Xu Yucheng
 #include <cv_bridge/cv_bridge.h>
 #include <std_msgs/String.h>
 #include <geometry_msgs/Twist.h>
+#include <actionlib/client/simple_action_client.h>
 
 //user-defined ROS message type
 #include <darknet_ros_msgs/BoundingBoxes.h>
 #include <image_pcl/object_position.h>
+#include <navigation/turn_robotAction.h>
+
 
 using namespace std;
 using namespace cv;
 using namespace pcl;
 
+typedef actionlib::SimpleActionClient<navigation::turn_robotAction> Client;
+Client client("turn_robot", true);
 /*
 OpenCV Coordinate System
 row == height == Point.y
@@ -69,8 +74,9 @@ int center_x = 0;
 int center_y = 0;
 int object_x = 0;
 int object_y = 0;
-std::string RGB_CAMERA_BASE;
-std::string ARM_BASE;
+std::string DEPTH_BASE     = "/camera_link";
+std::string ARM_BASE       = "/arm_base_link";
+std::string TURTLEBOT_BASE = "/base_link";
 
 tf::StampedTransform currTF;//监听到的tf变换
 tf::TransformListener*pListener;//监听tf变换的设备指针,具体定义在main函数ros::init之后了
@@ -78,7 +84,6 @@ tf::TransformListener*pListener;//监听tf变换的设备指针,具体定义在m
 //------------------------------
 //| ROS Subscriber & Publisher |
 //------------------------------
-
 ros::Subscriber nav_sub;
 ros::Subscriber darknet_sub;
 ros::Subscriber camera_info;
@@ -89,6 +94,23 @@ ros::Publisher  turn_robot;
 ros::Publisher  obj_pub;
 ros::Publisher  pcl_pub;
 
+void doneCallback (const actionlib::SimpleClientGoalState& state,
+                   const navigation::turn_robotResultConstPtr& result)
+{
+    ROS_INFO ("turn_robot %f finished, start detecting graspable object", result->final_angle);
+}
+
+void activeCallback ()
+{
+    ROS_INFO ("Goal setted, start turn_robot action");
+}
+
+void feedbackCallback (const navigation::turn_robotFeedbackConstPtr& feedback)
+{
+    ROS_INFO ("Current angle: %f", feedback->current_angle);
+}
+
+
 
 void adjustRobotOrientation ()
 {
@@ -96,67 +118,43 @@ void adjustRobotOrientation ()
     {
         //当没有达到要求的位置的时候发布Twist消息来轻微转到机器人
         //每次转动10度来调整机器人
-        geometry_msgs::Twist vel;
-        double rate = 50;
-        ros::Rate loopRate (rate);
-        float angular_speed = PI / 18;
-        float goal_angle    = PI / 18;
-        float turn_duration = goal_angle / angular_speed;
-        int ticks = int (turn_duration * rate);  
 
         //物体中心在屏幕中心左侧的时候需要逆时针转动机器人
         if (object_x < center_x)
         {
-            vel.linear.x  = 0;
-            vel.linear.y  = 0;
-            vel.linear.z  = 0;
-            vel.angular.x = 0;
-            vel.angular.y = 0;
-            vel.angular.z = angular_speed;
-            for (int i=0; i<ticks; i++)
+            //目标角度是10度
+            navigation::turn_robotGoal goal;
+            goal.goal_angle = PI/18;
+            client.sendGoal (goal, &doneCallback, &activeCallback, &feedbackCallback);
+            //每次转动之后判断一次物体与视野中心相对位置，如果已经满足要求则停止转动
+            if (fabs(center_x - object_x) < 10)
             {
-                turn_robot.publish (vel);
-                //命令机器人休眠一个Rate的时间
-                loopRate.sleep();
-
-                //每次转动之后判断一次物体与视野中心相对位置，如果已经满足要求则停止转动
-                if (fabs(center_x - object_x) < 10)
-                {
-                    ROS_INFO ("Aiming at the Graspable object");
-                    ROS_INFO ("Stop Adjust Robot");
-                    adjust_robot = false;
-                    in_position  = true;
-                    break;
-                }
-
-            }  
+                ROS_INFO ("Aiming at the Graspable object");
+                ROS_INFO ("Stop Adjusting Robot");
+                adjust_robot = false;
+                in_position  = true;
+                break;
+            }
+ 
         }
 
         //物体中心在屏幕中心右侧的时候需要顺时针转动机器人
         if (object_x > center_x)
         {
-            vel.linear.x  = 0;
-            vel.linear.y  = 0;
-            vel.linear.z  = 0;
-            vel.angular.x = 0;
-            vel.angular.y = 0;
-            vel.angular.z = -angular_speed;
-            for (int i=0; i<ticks; i++)
+            //目标角度是-10度
+            //目标角度是10度
+            navigation::turn_robotGoal goal;
+            goal.goal_angle = (-PI/18);
+            client.sendGoal (goal, &doneCallback, &activeCallback, &feedbackCallback);
+            //每次转动之后判断一次物体与视野中心相对位置，如果已经满足要求则停止转动
+            if (fabs(center_x - object_x) < 10)
             {
-                turn_robot.publish (vel);
-                //命令机器人休眠一个Rate的时间
-                loopRate.sleep();
-
-                //每次转动之后判断一次物体与视野中心相对位置，如果已经满足要求则停止转动
-                if (fabs(center_x - object_x) < 10)
-                {
-                    ROS_INFO ("Aiming at the Graspable object");
-                    ROS_INFO ("Stop Adjust Robot");
-                    adjust_robot = false;
-                    in_position  = true;
-                    break;
-                }
-            }  
+                ROS_INFO ("Aiming at the Graspable object");
+                ROS_INFO ("Stop Adjusting Robot");
+                adjust_robot = false;
+                in_position  = true;
+                break;
+            } 
         }
 
     }
@@ -198,35 +196,11 @@ void navCallback (const std_msgs::String::ConstPtr& msg)
         ROS_INFO ("Arrived at the nav point\n");
         ROS_INFO ("Now turn robot to find graspable object\n");
         //每次转动60度来寻找物体
-        geometry_msgs::Twist vel;
-        double rate = 50;
-        ros::Rate loopRate (rate);
-
-        //设定转动角速度
-        //正值为逆时针转动， 负值为顺时针转动
-        float angular_speed = 0.5;
-        //每次转动目标角度是60度
-        float goal_angle    = PI / 3;
-        //每次转动到目标角度需要的时间
-        float turn_duration = goal_angle / angular_speed; 
-        //需要发布多少次指令来实现，这一项与我们上面设定的频率有关
-        int ticks = int (turn_duration * rate);   
-        vel.linear.x  = 0;
-        vel.linear.y  = 0;
-        vel.linear.z  = 0;
-        vel.angular.x = 0;
-        vel.angular.y = 0;
-        vel.angular.z = angular_speed;
-
         while (!find_object)
         {
-            for (int i=0; i<ticks; i++)
-            {
-                turn_robot.publish (vel);
-                //命令机器人休眠一个Rate的时间
-                loopRate.sleep();
-            }
-            vel.angular.z = 0;
+            navigation::turn_robotGoal goal;
+            goal.goal_angle = PI/3;
+            client.sendGoal (goal, &doneCallback, &activeCallback, &feedbackCallback);
         }
         //当find_object变为true即找到了物体的时候
         //向发送一个空的Twist消息使机器人保持静止
@@ -280,7 +254,7 @@ void pclCallback (sensor_msgs::PointCloud2 msg)
         */
         try
         {
-            pListener->lookupTransform(ARM_BASE, RGB_CAMERA_BASE, ros::Time(0), currTF);
+            pListener->lookupTransform(ARM_BASE, DEPTH_BASE, ros::Time(0), currTF);
         }
         catch (tf::TransformException &ex)
         {
@@ -370,6 +344,10 @@ void getObjectPosition()
 
 int main(int argc, char** argv)
 {
+    ROS_INFO ("Waiting for action server");
+    client.waitForServer();
+    ROS_INFO ("Action server started");
+
     ROS_INFO ("\tWaiting for signal\t");
     ROS_INFO ("\tinitial ROS node\t");
 

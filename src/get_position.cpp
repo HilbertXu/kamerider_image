@@ -99,15 +99,10 @@ void pclCallback(sensor_msgs::PointCloud2 msg)
         Cloud_Frame.points[i].y = Y;
         Cloud_Frame.points[i].z = Z;
     }
-
-    
-
     pcl::toROSMsg(Cloud_Frame, oMsg);
-    oMsg.header.frame_id = "astra";
+    oMsg.header.frame_id = "camera_link";
     pcl_pub.publish(oMsg);
 }
-
-
 /*
 @TODO
 将鼠标点击操作替换为以下两种可能的操作
