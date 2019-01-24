@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(image_pcl)
+project(kamerider_image_detection)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -7,33 +7,21 @@ project(image_pcl)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-
-## System dependencies are found with CMake's conventions
-find_package(Boost REQUIRED COMPONENTS system)
-find_package(OpenCV REQUIRED)
-
-#Find PCL required
-find_package(PCL 1.9 REQUIRED)
-set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARIES})
-add_definitions(${PCL_DEFINITIONS})
-
-
 find_package(catkin REQUIRED COMPONENTS
-  message_generation
   cv_bridge
   geometry_msgs
   image_transport
-  pcl_conversions
-  pcl_msgs
-  pcl_ros
+  message_generation
   roscpp
   rospy
   sensor_msgs
   std_msgs
   tf
 )
+
+## System dependencies are found with CMake's conventions
+# find_package(Boost REQUIRED COMPONENTS system)
+
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -65,14 +53,12 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-   FILES
-   object_position.msg
-)
-generate_messages(
-  DEPENDENCIES
-    std_msgs
-)
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
+
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
@@ -90,7 +76,7 @@ generate_messages(
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   geometry_msgs#   pcl_msgs#   sensor_msgs#   std_msgs
+#   geometry_msgs#   sensor_msgs#   std_msgs
 # )
 
 ################################################
@@ -123,10 +109,10 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES image_pcl
-  CATKIN_DEPENDS cv_bridge geometry_msgs image_transport pcl_conversions pcl_msgs pcl_ros roscpp rospy sensor_msgs std_msgs tf message_runtime
-  DEPENDS system_lib
+#  INCLUDE_DIRS include
+#  LIBRARIES kamerider_image_detection
+#  CATKIN_DEPENDS cv_bridge geometry_msgs image_transport message_generation roscpp rospy sensor_msgs std_msgs tf
+#  DEPENDS system_lib
 )
 
 ###########
@@ -142,7 +128,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/image_pcl.cpp
+#   src/${PROJECT_NAME}/kamerider_image_detection.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -153,7 +139,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/image_pcl_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/kamerider_image_detection_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -169,51 +155,6 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-
-add_executable(get_position src/get_position.cpp)
-target_link_libraries(get_position ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_dataFormat src/pcl_dataFormat.cpp)
-target_link_libraries(pcl_dataFormat ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_withFilter src/pcl_withFilter.cpp)
-target_link_libraries(pcl_withFilter ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(save_pcl_as_pcd src/save_pcl_as_pcd.cpp)
-target_link_libraries(save_pcl_as_pcd ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcd_visualization src/pcd_visualization.cpp)
-target_link_libraries(pcd_visualization ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcd_simple_viewer src/pcd_simple_viewer.cpp)
-target_link_libraries(pcd_simple_viewer ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_keypoint_detect src/pcl_keypoint_detect.cpp)
-target_link_libraries(pcl_keypoint_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_segmentate src/pcl_segmentate.cpp)
-target_link_libraries(pcl_segmentate ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_supervoxel src/pcl_supervoxel.cpp)
-target_link_libraries(pcl_supervoxel ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_rgb_merge src/pcl_rgb_merge.cpp)
-target_link_libraries(pcl_rgb_merge ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(door_detect src/door_detect.cpp)
-target_link_libraries(door_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(bar_detect src/bar_detect.cpp)
-target_link_libraries(bar_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_PMF src/pcl_PMF.cpp)
-target_link_libraries(pcl_PMF ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_ransac src/pcl_ransac.cpp)
-target_link_libraries(pcl_ransac ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(find_object src/find_object.cpp)
-target_link_libraries(find_object ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 #############
 ## Install ##
@@ -255,7 +196,7 @@ target_link_libraries(find_object ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_image_pcl.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_kamerider_image_detection.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

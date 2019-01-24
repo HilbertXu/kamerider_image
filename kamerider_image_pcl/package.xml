@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>image_pcl</name>
+  <name>kamerider_image_pcl</name>
   <version>0.0.0</version>
   <description>The image_pcl package</description>
 

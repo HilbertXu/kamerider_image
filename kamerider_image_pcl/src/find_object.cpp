@@ -45,15 +45,15 @@ Author: Xu Yucheng
 
 //user-defined ROS message type
 #include <darknet_ros_msgs/BoundingBoxes.h>
-#include <image_pcl/object_position.h>
-#include <navigation/turn_robotAction.h>
+#include <kamerider_image_pcl/object_position.h>
+#include <kamerider_navigation/turn_robotAction.h>
 
 
 using namespace std;
 using namespace cv;
 using namespace pcl;
 
-typedef actionlib::SimpleActionClient<navigation::turn_robotAction> Client;
+typedef actionlib::SimpleActionClient<kamerider_navigation::turn_robotAction> Client;
 Client client("turn_robot", true);
 /*
 OpenCV Coordinate System
@@ -95,7 +95,7 @@ ros::Publisher  obj_pub;
 ros::Publisher  pcl_pub;
 
 void doneCallback (const actionlib::SimpleClientGoalState& state,
-                   const navigation::turn_robotResultConstPtr& result)
+                   const kamerider_navigation::turn_robotResultConstPtr& result)
 {
     ROS_INFO ("turn_robot %f finished, start detecting graspable object", result->final_angle);
 }
@@ -105,12 +105,10 @@ void activeCallback ()
     ROS_INFO ("Goal setted, start turn_robot action");
 }
 
-void feedbackCallback (const navigation::turn_robotFeedbackConstPtr& feedback)
+void feedbackCallback (const kamerider_navigation::turn_robotFeedbackConstPtr& feedback)
 {
     ROS_INFO ("Current angle: %f", feedback->current_angle);
 }
-
-
 
 void adjustRobotOrientation ()
 {
@@ -123,7 +121,7 @@ void adjustRobotOrientation ()
         if (object_x < center_x)
         {
             //目标角度是10度
-            navigation::turn_robotGoal goal;
+            kamerider_navigation::turn_robotGoal goal;
             goal.goal_angle = PI/18;
             client.sendGoal (goal, &doneCallback, &activeCallback, &feedbackCallback);
             //每次转动之后判断一次物体与视野中心相对位置，如果已经满足要求则停止转动
@@ -143,7 +141,7 @@ void adjustRobotOrientation ()
         {
             //目标角度是-10度
             //目标角度是10度
-            navigation::turn_robotGoal goal;
+            kamerider_navigation::turn_robotGoal goal;
             goal.goal_angle = (-PI/18);
             client.sendGoal (goal, &doneCallback, &activeCallback, &feedbackCallback);
             //每次转动之后判断一次物体与视野中心相对位置，如果已经满足要求则停止转动
@@ -198,7 +196,7 @@ void navCallback (const std_msgs::String::ConstPtr& msg)
         //每次转动60度来寻找物体
         while (!find_object)
         {
-            navigation::turn_robotGoal goal;
+            kamerider_navigation::turn_robotGoal goal;
             goal.goal_angle = PI/3;
             client.sendGoal (goal, &doneCallback, &activeCallback, &feedbackCallback);
         }
@@ -229,8 +227,8 @@ void darknetCallback (darknet_ros_msgs::BoundingBoxes msg)
                 //记录这个物体对应的id
                 //修改find_object使机器人停止转动
                 idx = i;
-                printf ("Detected %d Bounding_Boxes\n",object_name);
-                printf ("\t Bounding_Boxes %d=[Xmin Ymin Xmax Ymax]=[%d %d %d %d]\n", object_name,
+                printf ("Detected %s Bounding_Boxes\n",object_name);
+                printf ("\t Bounding_Boxes %s=[Xmin Ymin Xmax Ymax]=[%d %d %d %d]\n", object_name,
 				msg.bounding_boxes[i].xmin,
 				msg.bounding_boxes[i].ymin,
 				msg.bounding_boxes[i].xmax,
@@ -309,13 +307,11 @@ void getObjectPosition()
     int idx[9] = {(object_y-1)*camera_width+object_x-1, (object_y-1)*camera_width+object_x, (object_y-1)*camera_width+object_x+1,
                       object_y*camera_width+object_x-1, object_y*camera_width+object_x, object_y*camera_width+object_x+1,
                       (object_y+1)*camera_width+object_x-1, (object_y+1)*camera_width+object_x, (object_y+1)*camera_width+object_x+1};
-
     if (cloud_arm->empty())
     {
         ROS_INFO ("Waiting For PCL Transform");
         sleep (2);
     }
-
     else
     {
         //遍历由darknet产生的bounding_box确定的物体中心点周围的9个点
@@ -334,7 +330,7 @@ void getObjectPosition()
                 num ++;
             }
         }
-        image_pcl::object_position pos;
+        kamerider_image_pcl::object_position pos;
         pos.x = x/num;
         pos.y = y/num;
         pos.z = z/num;
@@ -347,10 +343,8 @@ int main(int argc, char** argv)
     ROS_INFO ("Waiting for action server");
     client.waitForServer();
     ROS_INFO ("Action server started");
-
     ROS_INFO ("\tWaiting for signal\t");
     ROS_INFO ("\tinitial ROS node\t");
-
     ros::init (argc, argv, "find_object");
     ros::NodeHandle nh;
 
@@ -363,12 +357,10 @@ int main(int argc, char** argv)
 
     turn_robot  = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
     pcl_pub     = nh.advertise<sensor_msgs::PointCloud2>("/arm_base_pcl", 1);
-
     //到达合适位置之后，发布一个物体在机械臂坐标系下的（X，Y，Z）位置信息
-    obj_pub     = nh.advertise<image_pcl::object_position>("/object_position", 1);
+    obj_pub     = nh.advertise<kamerider_image_pcl::object_position>("/object_position", 1);
     
     tf::TransformListener Listener;
 	pListener = &Listener;
-
     ros::spin();
 }
