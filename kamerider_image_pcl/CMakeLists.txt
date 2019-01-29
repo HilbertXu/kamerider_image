@@ -22,6 +22,7 @@ add_definitions(${PCL_DEFINITIONS})
 
 find_package(catkin REQUIRED COMPONENTS
   message_generation
+  kamerider_image_msgs
   cv_bridge
   geometry_msgs
   image_transport
@@ -65,14 +66,14 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-   FILES
-   object_position.msg
-)
-generate_messages(
-  DEPENDENCIES
-    std_msgs
-)
+# add_message_files(
+#    FILES
+#    object_position.msg
+# )
+# generate_messages(
+#   DEPENDENCIES
+#     std_msgs
+# )
 ## Generate services in the 'srv' folder
 # add_service_files(
 #   FILES
@@ -199,12 +200,6 @@ target_link_libraries(pcl_supervoxel ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${P
 
 add_executable(pcl_rgb_merge src/pcl_rgb_merge.cpp)
 target_link_libraries(pcl_rgb_merge ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(door_detect src/door_detect.cpp)
-target_link_libraries(door_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(bar_detect src/bar_detect.cpp)
-target_link_libraries(bar_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 add_executable(pcl_PMF src/pcl_PMF.cpp)
 target_link_libraries(pcl_PMF ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})

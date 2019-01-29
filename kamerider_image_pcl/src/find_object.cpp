@@ -45,7 +45,7 @@ Author: Xu Yucheng
 
 //user-defined ROS message type
 #include <darknet_ros_msgs/BoundingBoxes.h>
-#include <kamerider_image_pcl/object_position.h>
+#include <kamerider_image_msgs/ObjectPosition.h>
 #include <kamerider_navigation/turn_robotAction.h>
 
 
@@ -330,7 +330,7 @@ void getObjectPosition()
                 num ++;
             }
         }
-        kamerider_image_pcl::object_position pos;
+        kamerider_image_msgs::ObjectPosition pos;
         pos.x = x/num;
         pos.y = y/num;
         pos.z = z/num;
@@ -358,7 +358,7 @@ int main(int argc, char** argv)
     turn_robot  = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1);
     pcl_pub     = nh.advertise<sensor_msgs::PointCloud2>("/arm_base_pcl", 1);
     //到达合适位置之后，发布一个物体在机械臂坐标系下的（X，Y，Z）位置信息
-    obj_pub     = nh.advertise<kamerider_image_pcl::object_position>("/object_position", 1);
+    obj_pub     = nh.advertise<kamerider_image_msgs::ObjectPosition>("/ObjectPosition", 1);
     
     tf::TransformListener Listener;
 	pListener = &Listener;

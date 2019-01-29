@@ -2,16 +2,27 @@ cmake_minimum_required(VERSION 2.8.3)
 project(kamerider_image_detection)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+find_package(PCL 1.9 REQUIRED)
+set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
+include_directories(${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARIES})
+add_definitions(${PCL_DEFINITIONS})
+
+
 find_package(catkin REQUIRED COMPONENTS
+  message_generation
+  kamerider_image_msgs
   cv_bridge
   geometry_msgs
   image_transport
-  message_generation
+  pcl_conversions
+  pcl_msgs
+  pcl_ros
   roscpp
   rospy
   sensor_msgs
@@ -55,8 +66,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 # add_message_files(
 #   FILES
-#   Message1.msg
-#   Message2.msg
+#   gender.msg
+#   BoundingBox.msg
+#   FaceDetection.msg
 # )
 
 ## Generate services in the 'srv' folder
@@ -76,7 +88,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate added messages and services with any dependencies listed here
 # generate_messages(
 #   DEPENDENCIES
-#   geometry_msgs#   sensor_msgs#   std_msgs
+#      std_msgs
+#   sensor_msgs#   std_msgs
 # )
 
 ################################################
@@ -109,10 +122,10 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES kamerider_image_detection
-#  CATKIN_DEPENDS cv_bridge geometry_msgs image_transport message_generation roscpp rospy sensor_msgs std_msgs tf
-#  DEPENDS system_lib
+  INCLUDE_DIRS include
+  LIBRARIES image_pcl
+  CATKIN_DEPENDS cv_bridge geometry_msgs image_transport pcl_conversions pcl_msgs pcl_ros roscpp rospy sensor_msgs std_msgs tf message_runtime
+  DEPENDS system_lib
 )
 
 ###########
@@ -155,6 +168,14 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+add_executable(face_detection src/face_detection.cpp)
+target_link_libraries(face_detection ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(door_detect src/door_detect.cpp)
+target_link_libraries(door_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(bar_detect src/bar_detect.cpp)
+target_link_libraries(bar_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
 #############
 ## Install ##
