@@ -151,10 +151,12 @@ public:
         //初始化ros节点
         ros::init(argc, argv, "face_detection");
         ros::NodeHandle nh;
+        ROS_INFO("----------INIT----------");
+        ROS_INFO("----Waiting for image----");
 
         nh.param<std::string>("sub_image_raw_topic_name",     sub_image_topic_name,         "/image_raw");
         nh.param<std::string>("pub_face_detected_topic_name", pub_face_detected_topic_name, "/kamerider_image_detection/face_detect_result");
-        nh.param<std::string>("path_to_pretrained_dataset",   path_to_pretrained_dataset,   "$HOME/catkin_ws/src/kamerider_image/kamerider_image_msgs/shape_predictor_68_face_landmarks.dat");
+        nh.param<std::string>("path_to_pretrained_dataset",   path_to_pretrained_dataset,   "/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/shape_predictor_68_face_landmarks.dat");
 
         //定义订阅器和发布器
         sub_image  = nh.subscribe(sub_image_topic_name, 1, &face_detection::imageCallback, this);
