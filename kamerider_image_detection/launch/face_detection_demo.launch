@@ -1,4 +1,3 @@
-<<?xml version="1.0"?>
 <launch>
     <arg name="sub_image_raw_topic_name"     default="/image_raw" />
     <arg name="pub_face_detected_topic_name" default="/kamerider_image_detection/face_detect_result" />
