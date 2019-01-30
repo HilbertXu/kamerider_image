@@ -142,10 +142,13 @@ private:
             DetectResult.bounding_boxes[j].xmax = shape.part(1).x();
             DetectResult.bounding_boxes[j].ymax = shape.part(1).y();
         }
-        face_detection::publishMessage(pub_result, DetectResult);
+        //显示识别结果
         window.clear_overlay();
         window.set_image(img);
         window.add_overlay(dlib::render_face_detections(shapes));
+
+        //通过发布器将识别的结果发布出去
+        face_detection::publishMessage(pub_result, DetectResult);
     }
 public:
     int run (int argc, char** argv)
