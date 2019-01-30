@@ -38,6 +38,7 @@ Mat::at(Point(x, y)) == Mat::at(y,x)
 #include <stdlib.h>
 
 // kamerider_image_msgs
+#include "kamerider_image_detection/timestramp.h"
 #include <kamerider_image_msgs/FaceDetection.h>
 #include <kamerider_image_msgs/BoundingBox.h>
 
@@ -93,6 +94,7 @@ private:
     //函数接受一个Mat矩阵类型的参数，以及一个字符串参数指向需要加载的数据集
     void face_detect(cv::Mat pSrc, std::string dataset)
     {
+        timestramp tp;
         cv::Mat scaled_img;
         //首先检测图像尺寸，若尺寸过大，则需要对图像进行压缩
         if (pSrc.cols >= 640 || pSrc.rows >= 480)
