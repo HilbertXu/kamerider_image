@@ -7,11 +7,17 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+find_package(OpenCV REQUIRED)
 find_package(PCL 1.9 REQUIRED)
 set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARIES})
 add_definitions(${PCL_DEFINITIONS})
+
+find_package(dlib REQUIRED)
+include_directories(${dilb_INCLUDE_DIRS})
+link_directories(${dlib_LIBRARIES})
+add_definitions(${dlib_DEFINITIONS})
 
 
 find_package(catkin REQUIRED COMPONENTS
@@ -31,8 +37,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
-
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS thread)
 
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
@@ -169,7 +175,7 @@ include_directories(
 #   ${catkin_LIBRARIES}
 # )
 add_executable(face_detection src/face_detection.cpp)
-target_link_libraries(face_detection ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(face_detection ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
 
 add_executable(door_detect src/door_detect.cpp)
 target_link_libraries(door_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})

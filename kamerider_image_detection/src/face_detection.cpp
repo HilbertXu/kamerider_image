@@ -12,7 +12,7 @@ col == width == Point.x
 Mat::at(Point(x, y)) == Mat::at(y,x)
 */
 
-//ROS headers
+// ROS headers
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <std_msgs/Int8.h>
@@ -20,20 +20,27 @@ Mat::at(Point(x, y)) == Mat::at(y,x)
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/image_encodings.h>
 
+// Dlib headers
 #include <dlib/image_processing/frontal_face_detector.h>
 #include <dlib/image_processing/render_face_detections.h>
 #include <dlib/image_processing.h>
 #include <dlib/opencv.h>
 #include <dlib/gui_widgets.h>
 #include <dlib/image_io.h>
+
+// Opencv
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
+
+// C++
 #include <iostream>
 #include <vector>
 #include <stdlib.h>
-//引用自己定义的消息类型
-#include <kamerider_image_msgs/BoundingBox.h>
+
+// kamerider_image_msgs
 #include <kamerider_image_msgs/FaceDetection.h>
+#include <kamerider_image_msgs/BoundingBox.h>
+
 
 using namespace std;
 using namespace dlib;
@@ -155,3 +162,9 @@ public:
         ros::spin();
     }
 };
+
+int main(int argc, char** argv)
+{
+    face_detection detector;
+    return detector.run(argc, argv);
+}
