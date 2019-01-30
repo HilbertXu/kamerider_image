@@ -52,7 +52,7 @@ private:
     //从参数服务器中获取到的图像话题名称
     std::string sub_image_topic_name;
     std::string pub_face_detected_topic_name;
-    std::string pretrained_dataset;
+    std::string path_to_pretrained_dataset;
 
     ros::Subscriber sub_image;
     ros::Publisher  pub_result;
@@ -61,7 +61,7 @@ private:
     {
         cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         cv::Mat img = cv_ptr->image;
-        face_detection::face_detect(img, face_detection::pretrained_dataset);
+        face_detection::face_detect(img, face_detection::path_to_pretrained_dataset);
 
     }
 
@@ -154,7 +154,7 @@ public:
 
         nh.param<std::string>("sub_image_raw_topic_name",     sub_image_topic_name,         "/image_raw");
         nh.param<std::string>("pub_face_detected_topic_name", pub_face_detected_topic_name, "/kamerider_image_detection/face_detect_result");
-        nh.param<std::string>("pretrained_dataset",           pretrained_dataset,           "/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_msgs/shape_predictor_68_face_landmarks.dat");
+        nh.param<std::string>("path_to_pretrained_dataset",   path_to_pretrained_dataset,   "$HOME/catkin_ws/src/kamerider_image/kamerider_image_msgs/shape_predictor_68_face_landmarks.dat");
 
         //定义订阅器和发布器
         sub_image  = nh.subscribe(sub_image_topic_name, 1, &face_detection::imageCallback, this);

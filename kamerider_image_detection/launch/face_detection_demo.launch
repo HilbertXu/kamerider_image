@@ -1,0 +1,15 @@
+<<?xml version="1.0"?>
+<launch>
+    <arg name="sub_image_raw_topic_name"     default="/image_raw" />
+    <arg name="pub_face_detected_topic_name" default="/kamerider_image_detection/face_detect_result" />
+    <arg name="path_to_pretrained_dataset"   default="$(find kamerider_image_detection)/shape_predictor_68_face_landmarks.dat" />
+    
+    <node name="face_detection" pkg="kamerider_image_detection" type="face_detection" output="screen">
+        <param name="sub_image_raw_topic_name"     type="string" value="$(arg sub_image_raw_topic_name)" />
+        <param name="pub_face_detected_topic_name" type="string" value="$(arg pub_face_detected_topic_name)" />
+        <param name="path_to_pretrained_dataset"   type="string" value="$(arg path_to_pretrained_dataset)" />
+    </node>
+
+    <node name="uvc_camera_node" pkg="uvc_camera" type="uvc_camera_node" output="screen" />
+
+</launch>
