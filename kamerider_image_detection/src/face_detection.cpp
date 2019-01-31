@@ -62,6 +62,8 @@ private:
     {
         cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         cv::Mat img = cv_ptr->image;
+        cv::imshow("face_detection", img);
+        cv::waitKey(0);
         face_detection::face_detect(img, face_detection::path_to_pretrained_dataset);
 
     }
@@ -111,7 +113,7 @@ private:
         dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
         dlib::shape_predictor sp;
         dlib::deserialize(dataset) >> sp;
-        dlib::image_window window, window_faces;
+        dlib::image_window window;
 
         //将opencv下mat格式的图片转换为Dlib格式的图片
         dlib::array2d<dlib::rgb_pixel> img;
