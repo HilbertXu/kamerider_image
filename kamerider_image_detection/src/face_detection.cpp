@@ -132,8 +132,8 @@ private:
                 bbox.Class = "face";
                 bbox.xmin = rects[j].left();
                 bbox.ymin = rects[j].top();
-                bbox.xmax = rects[j].left()+rects.width();
-                bbox.ymax = rects[j].top()+rects.height();
+                bbox.xmax = rects[j].left()+rects[j].width();
+                bbox.ymax = rects[j].top()+rects[j].height();
                 bounding_boxes.push_back(bbox);
             }
             //显示识别结果
