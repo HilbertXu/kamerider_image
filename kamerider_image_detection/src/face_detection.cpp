@@ -60,17 +60,20 @@ private:
 
     void imageCallback(const sensor_msgs::ImageConstPtr& msg)
     {
+        ROS_INFO ("Receiving image");
         cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
         cv::Mat img = cv_ptr->image;
-        cv::imshow("face_detection", img);
-        cv::waitKey(0);
+        cv::Size pSize = cv::Size(640, 480);
+        cv::resize(img, img, pSize);
+        //cv::imshow("face_detection", img);
+        //cv::waitKey(0);
         face_detection::face_detect(img, face_detection::path_to_pretrained_dataset);
 
     }
 
-    cv::Mat my_resize_image(cv::Mat pSrc, double rScale, double cScale)
+    cv::Mat my_resize_image(cv::Mat pSrc, double Scale)
     {
-        cv::Size pSize = cv::Size(pSrc.cols*cScale, pSrc.rows*rScale);
+        cv::Size pSize = cv::Size(pSrc.cols*Scale, pSrc.rows*Scale);
         cv::Mat pRes = cv::Mat (pSize, CV_32S);
         cv::resize(pSrc, pRes, pSize);
         return pRes;
@@ -82,75 +85,70 @@ private:
         kamerider_image_msgs::FaceDetection face_detection_msg;
         face_detection_msg.header   = message.header;
         face_detection_msg.face_num = message.face_num;
-        for (int i = 0; i< sizeof(message.bounding_boxes); i++)
-        {
-            face_detection_msg.bounding_boxes[i].xmax = message.bounding_boxes[i].xmax;
-            face_detection_msg.bounding_boxes[i].xmin = message.bounding_boxes[i].xmin;
-            face_detection_msg.bounding_boxes[i].ymax = message.bounding_boxes[i].ymax;
-            face_detection_msg.bounding_boxes[i].ymin = message.bounding_boxes[i].ymin;
-        }
-        
+        face_detection_msg.bounding_boxes = message.bounding_boxes;
         publisher.publish(face_detection_msg);
     }
     
     //函数接受一个Mat矩阵类型的参数，以及一个字符串参数指向需要加载的数据集
     void face_detect(cv::Mat pSrc, std::string dataset)
     {
-        timestramp tp;
-        cv::Mat scaled_img;
-        //首先检测图像尺寸，若尺寸过大，则需要对图像进行压缩
-        if (pSrc.cols >= 640 || pSrc.rows >= 480)
+        try
         {
-            double rScale = 480 / (pSrc.rows);
-            double cScale = 640 / (pSrc.cols);
-            scaled_img = face_detection::my_resize_image(pSrc, rScale, cScale);
+            timestramp tp;
+            //缩放图片来提高程序运行速度
+            cv::Mat scaled_img = face_detection::my_resize_image(pSrc, 0.5);
+
+            dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
+            dlib::shape_predictor sp;
+            dlib::deserialize(dataset) >> sp;
+            dlib::image_window window;
+
+            //将opencv下mat格式的图片转换为Dlib格式的图片
+            dlib::array2d<dlib::rgb_pixel> img;
+            dlib::assign_image(img, dlib::cv_image<dlib::bgr_pixel>(scaled_img));
+            //放大图像来检测小的人脸部分
+            dlib::pyramid_up(img);
+
+            //使用detectoe来检测照片中可能存在的人脸，并使用bounding boxes框出来
+            std::vector<dlib::rectangle> rects = detector(img);
+            std::cout << "Number of faces detected is: " << rects.size() << std::endl;
+
+            //使用shape_predictor来确定每个人脸的bounding boxes在图片中的位置
+            std::vector<dlib::full_object_detection> shapes;
+
+            //生成一个自定义消息类型的对象，来储存识别的结果
+            kamerider_image_msgs::FaceDetection DetectResult;
+            DetectResult.face_num = rects.size();
+            kamerider_image_msgs::BoundingBox bbox;
+            std::vector<kamerider_image_msgs::BoundingBox> bounding_boxes;
+            
+            for (unsigned long j = 0; j< rects.size(); j++)
+            {
+                dlib::full_object_detection shape = sp(img, rects[j]);
+                cout << "number of parts: " << shape.num_parts() << endl;
+                cout << "pixel position of first part:  " << shape.part(0) << endl;
+                cout << "pixel position of second part: " << shape.part(1) << endl;
+                shapes.push_back(shape);
+                bbox.Class = "face";
+                bbox.xmin = rects.left();
+                bbox.ymin = rects.top();
+                bbox.xmax = rects.left()+rects.width();
+                bbox.ymax = rects.top()+rects.height();
+                bounding_boxes.push_back(bbox);
+            }
+            //显示识别结果
+            window.clear_overlay();
+            window.set_image(img);
+            window.add_overlay(dlib::render_face_detections(shapes));
+
+            //通过发布器将识别的结果发布出去
+            face_detection::publishMessage(pub_result, DetectResult);
         }
-        else
+        catch (exception& e)
         {
-            scaled_img = face_detection::my_resize_image(pSrc, 1, 1);
+            cout << "\nexception thrown!" << endl;
+            cout << e.what() << endl;
         }
-
-        dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
-        dlib::shape_predictor sp;
-        dlib::deserialize(dataset) >> sp;
-        dlib::image_window window;
-
-        //将opencv下mat格式的图片转换为Dlib格式的图片
-        dlib::array2d<dlib::rgb_pixel> img;
-        dlib::assign_image(img, dlib::cv_image<dlib::bgr_pixel>(scaled_img));
-        //放大图像来检测小的人脸部分
-        dlib::pyramid_up(img);
-
-        //使用detectoe来检测照片中可能存在的人脸，并使用bounding boxes框出来
-        std::vector<dlib::rectangle> rects = detector(img);
-        std::cout << "Number of faces detected is: " << rects.size() << std::endl;
-
-        //使用shape_predictor来确定每个人脸的bounding boxes在图片中的位置
-        std::vector<dlib::full_object_detection> shapes;
-
-        //生成一个自定义消息类型的对象，来储存识别的结果
-        kamerider_image_msgs::FaceDetection DetectResult;
-        DetectResult.face_num = rects.size();
-        for (unsigned long j = 0; j< rects.size(); j++)
-        {
-            dlib::full_object_detection shape = sp(img, rects[j]);
-            cout << "number of parts: " << shape.num_parts() << endl;
-            cout << "pixel position of first part:  " << shape.part(0) << endl;
-            cout << "pixel position of second part: " << shape.part(1) << endl;
-            shapes.push_back(shape);
-
-            DetectResult.bounding_boxes[j].xmin = shape.part(0).x();
-            DetectResult.bounding_boxes[j].ymin = shape.part(0).y();
-            DetectResult.bounding_boxes[j].xmax = shape.part(1).x();
-            DetectResult.bounding_boxes[j].ymax = shape.part(1).y();
-        }
-        //显示识别结果
-        window.clear_overlay();
-        window.set_image(img);
-        window.add_overlay(dlib::render_face_detections(shapes));
-
-        //通过发布器将识别的结果发布出去
-        face_detection::publishMessage(pub_result, DetectResult);
     }
 public:
     int run (int argc, char** argv)
@@ -167,7 +165,17 @@ public:
 
         //定义订阅器和发布器
         sub_image  = nh.subscribe(sub_image_topic_name, 1, &face_detection::imageCallback, this);
-        pub_result = nh.advertise<kamerider_image_msgs::FaceDetection>(pub_face_detected_topic_name, 10);
+        pub_result = nh.advertise<kamerider_image_msgs::FaceDetection>(pub_face_detected_topic_name, 1);
+        
+        std::cout << "Receving message from topics: " << std::endl;
+        std::cout << "--------------------------" << std::endl;
+        std::cout << sub_image_topic_name << std::endl;
+        std::cout << "Publishing message to topics: " << std::endl;
+        std::cout << "--------------------------" << std::endl;
+        std::cout << pub_face_detected_topic_name << std::endl;
+        std::cout << "Reading pretrained dataset from: " << std::endl;
+        std::cout << "--------------------------" << std::endl;
+        std::cout << path_to_pretrained_dataset   << std::endl;
         ros::spin();
     }
 };

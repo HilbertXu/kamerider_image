@@ -15,6 +15,7 @@ link_directories(${PCL_LIBRARIES})
 add_definitions(${PCL_DEFINITIONS})
 
 find_package(dlib REQUIRED)
+set(dlib_INCLUDE_DIRS /usr/local/include/dlib)
 include_directories(${dilb_INCLUDE_DIRS})
 link_directories(${dlib_LIBRARIES})
 add_definitions(${dlib_DEFINITIONS})
@@ -182,6 +183,15 @@ target_link_libraries(door_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_
 
 add_executable(bar_detect src/bar_detect.cpp)
 target_link_libraries(bar_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(image_talker src/image_talker.cpp)
+target_link_libraries(image_talker ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+
+add_executable(dlib_test src/dlib_test.cpp)
+target_link_libraries(dlib_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
+
+add_executable(msg_test src/msg_test.cpp)
+target_link_libraries(msg_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
 
 #############
 ## Install ##
