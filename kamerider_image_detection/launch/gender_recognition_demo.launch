@@ -1,0 +1,19 @@
+<launch>
+    <arg name="sub_image_raw_topic_name"             default="/image_raw" />
+    <arg name="sub_take_photo_signal_topic_name"     default="/take_photo_signal" />
+    <arg name="pub_gender_recognition_topic_name"    default="/kamerider_image_detection/gender_recognition" />
+    <arg name="path_to_save_image"                   default="$(find kamerider_image_detection)/image_capture.jpg" />
+    <arg name="path_to_save_result"                   default="$(find kamerider_image_detection)/gender_recognition_result.jpg" />
+    
+    <node name="gender_recognition" pkg="kamerider_image_detection" type="gender_recognition.py" output="screen">
+
+        <param name="sub_image_raw_topic_name"             type="string" value="$(arg sub_image_raw_topic_name)" />
+        <param name="sub_take_photo_signal_topic_name"     type="string" value="$(arg sub_take_photo_signal_topic_name)" />
+        <param name="pub_gender_recognition_topic_name"    type="string" value="$(arg pub_gender_recognition_topic_name)" />
+        <param name="path_to_save_image"                   type="string" value="$(arg path_to_save_image)" />
+        <param name="path_to_save_result"                  type="string" value="$(arg path_to_save_image)" />
+    </node>
+
+    <node name="uvc_camera_node" pkg="uvc_camera" type="uvc_camera_node" output="screen" />
+
+</launch>
