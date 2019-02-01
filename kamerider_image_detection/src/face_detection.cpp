@@ -130,10 +130,10 @@ private:
                 cout << "pixel position of second part: " << shape.part(1) << endl;
                 shapes.push_back(shape);
                 bbox.Class = "face";
-                bbox.xmin = rects.left();
-                bbox.ymin = rects.top();
-                bbox.xmax = rects.left()+rects.width();
-                bbox.ymax = rects.top()+rects.height();
+                bbox.xmin = rects[j].left();
+                bbox.ymin = rects[j].top();
+                bbox.xmax = rects[j].left()+rects.width();
+                bbox.ymax = rects[j].top()+rects.height();
                 bounding_boxes.push_back(bbox);
             }
             //显示识别结果
