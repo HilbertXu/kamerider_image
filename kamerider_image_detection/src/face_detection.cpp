@@ -170,13 +170,13 @@ public:
         
         std::cout << "Receving message from topics: " << std::endl;
         std::cout << "--------------------------" << std::endl;
-        std::cout << sub_image_topic_name << std::endl;
+        std::cout << "\t" << sub_image_topic_name << std::endl;
         std::cout << "Publishing message to topics: " << std::endl;
         std::cout << "--------------------------" << std::endl;
-        std::cout << pub_face_detected_topic_name << std::endl;
+        std::cout << "\t" << pub_face_detected_topic_name << std::endl;
         std::cout << "Reading pretrained dataset from: " << std::endl;
         std::cout << "--------------------------" << std::endl;
-        std::cout << path_to_pretrained_dataset   << std::endl;
+        std::cout << "\t" <<path_to_pretrained_dataset   << std::endl;
         ros::spin();
     }
 };
