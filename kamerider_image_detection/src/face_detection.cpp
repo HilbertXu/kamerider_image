@@ -136,6 +136,7 @@ private:
                 bbox.ymax = rects[j].top()+rects[j].height();
                 bounding_boxes.push_back(bbox);
             }
+            DetectResult.bounding_boxes = bounding_boxes;
             //显示识别结果
             window.clear_overlay();
             window.set_image(img);
