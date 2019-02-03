@@ -121,14 +121,14 @@ class gender_recognition:
         gender_message.stand_num  = 0
         #保存并显示处理后的图片
         cv2.imwrite(self.path_to_save_result, cv_image)
-        #cv2.imshow('result', cv_image)
-        #cv2.waitKey(0)
         self.pub_result.publish(gender_message)
+        cv2.imshow('result', cv2.imread(self.path_to_save_result))
+        cv2.waitKey(0)
 
-if __name__ =='__main__':
+if __name__ == '__main__':
     #初始化节点
     rospy.init_node('gender_recognition')
-    print '----------init----------'
-    print '-----WAITING FOR IMAGE-----'
+    print ('----------init----------')
+    print ('-----WAITING FOR IMAGE-----')
     gender_recognition()
     rospy.spin()
