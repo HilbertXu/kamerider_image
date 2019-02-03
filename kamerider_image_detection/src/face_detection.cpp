@@ -2,7 +2,7 @@
 Date: 2019/1/24
 Author: Xu Yucheng
 E-mail: hilbertxu@outlook.com
-Abstract: Code for face detection in ros by using Dlib
+Abstract: Code for face detection in ros by using Dlib(C++)
 */
 
 /*NOTE:
