@@ -7,6 +7,13 @@ set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+
+find_package(GFlags)
+find_package(Glog)
+find_package(OpenCV)
+find_package(OpenPose REQUIRED)
+
 find_package(OpenCV REQUIRED)
 find_package(PCL 1.9 REQUIRED)
 set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
@@ -175,6 +182,9 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+#openpose ssample
+# add_executable(example.bin example.cpp)
+# target_link_libraries(example.bin ${OpenPose_LIBS} ${GFLAGS_LIBRARY} ${GLOG_LIBRARY} ${OpenCV_LIBS})
 add_executable(face_detection src/face_detection.cpp)
 target_link_libraries(face_detection ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
 
