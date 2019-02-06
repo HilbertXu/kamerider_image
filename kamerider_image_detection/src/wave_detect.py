@@ -52,6 +52,13 @@ class wave_detect:
         self.params["hand_detector"] = 2
         self.params["body_disable"] = True
 
+    def rect_to_bbox(self, rect):
+        x_min = rect.left()
+        y_min = rect.top()
+        x_max = rect.right()
+        y_max = rect.bottom()
+        return (x_min, y_min, x_max, y_max)
+
     def imageCallback(self, msg):
         print ("[INFO] Receiving image")
         bridge = CvBridge()
@@ -69,6 +76,18 @@ class wave_detect:
         detector  = dlib.get_frontal_face_detector()
         #利用检测器检测人脸
         rects = detector(gray_image, 2)
-        #获得人脸在图像中的位置之后，将人脸区域放大，然后在这个放大了的区域内检测手部
+        #获得人脸在图像中的位置之后，将人脸两侧区域放大，然后在这个放大了的区域内检测手部
 
-    def 
+    def face_region_zoom_out(self, rects):
+        for rect in rects:
+            rect_coords = self.rect_to_bbox(rect)
+            xmin = rect_coords[0]-100
+            ymin = rect_coords[1]-50
+            xmax = rect_coords[0]
+            ymax = rect_coords[3]+50
+            handRectangle = [
+                op.Rectangle(rect_coords[0]-100, rect_coords[1]-50, 100, 150),
+                op.Rectangle(rect_coords[2], rect_coords[1]-50, 100, 150)
+                ]
+
+
