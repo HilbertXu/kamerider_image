@@ -48,7 +48,7 @@ class wave_detect:
         #ROS param参数服务器中取得参数值
         self.sub_image_raw_topic_name      = rospy.get_param('sub_image_raw_topic_name',      '/image_raw')
         self.pub_wave_detect_topic_name    = rospy.get_param('pub_wave_detect_topic_name',    '/kamerider_image_detection/wave_detect')
-        self.path_to_save_image            = rospy.get_param('path_to_save_image',            '/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/wave_detect_result.png')
+        self.path_to_save_image            = rospy.get_param('path_to_save_image',            '/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/result/wave_detect_result.png')
         self.pub_turn_robot_command        = rospy.get_param('pub_turn_robot_command',        '/kamerider_navigation/turn_robot_server')
         #发布器和订阅器
         rospy.Subscriber(self.sub_image_raw_topic_name, Image, self.imageCallback)
