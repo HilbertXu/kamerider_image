@@ -97,6 +97,7 @@ class face_detection:
         detector  = dlib.get_frontal_face_detector()
         #利用检测器检测人脸
         rects = detector(gray_image, 2)
+        print ("The Number of face detected is: {}".format(len(rects)))
         #检测是否需要进行关键点检测
         if self.keypoint_detect:
             #实例化人脸特征点检测器
