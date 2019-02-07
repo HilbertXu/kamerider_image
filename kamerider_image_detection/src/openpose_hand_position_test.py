@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import cv2
-from openpose import pyopenpose as op
 
 image = cv2.imread('/home/kamerider/openpose/examples/media/COCO_val2014_000000000241.jpg')
 image = cv2.rectangle(image, (320, 377, 69, 69),(0,0,255))

@@ -124,7 +124,10 @@ if __name__ == '__main__':
     rospy.init_node('wave_detect')
     print ('----------init----------')
     print ('-----WAITING FOR IMAGE-----')
-    wave_detect()
+    try:
+        wave_detect()
+    except:
+        print ("Please check __init__ function")
     rospy.spin()
 
 
