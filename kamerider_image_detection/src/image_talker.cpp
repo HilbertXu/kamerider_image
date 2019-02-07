@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     image_transport::ImageTransport it(nh);
     image_transport::Publisher pub = it.advertise("/image_raw", 1);
 
-    cv::Mat image = cv::imread("/home/kamerider/Pictures/image_capture.jpg", CV_LOAD_IMAGE_COLOR);
+    cv::Mat image = cv::imread("/home/kamerider/Pictures/face.jpg", CV_LOAD_IMAGE_COLOR);
     sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", image).toImageMsg();
 
     ros::Rate loop_rate(5);

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 '''
 Date: 2019/02/03
 Author: Xu Yucheng
@@ -36,6 +38,11 @@ class wave_detect:
         #留出来接口，在launch文件中修改对应话题名称
         self.pub_turn_robot                = None
         self.get_params()
+
+        # Starting OpenPose
+        self.opWrapper = op.WrapperPython()
+        self.opWrapper.configure(self.params)
+        self.opWrapper.start()
         
     def get_params(self):
         #ROS param参数服务器中取得参数值
@@ -73,8 +80,8 @@ class wave_detect:
         xmax = rect_coords[0]
         ymax = rect_coords[3]+50
         handRectangle = [
-            op.Rectangle(rect_coords[0]-100, rect_coords[1]-50, 100, 150),
-            op.Rectangle(rect_coords[2], rect_coords[1]-50, 100, 150)
+            op.Rectangle(rect_coords[0]-100, rect_coords[1]-50, 150, 150),
+            op.Rectangle(rect_coords[2], rect_coords[1]-50, 150, 150)
         ]
         return handRectangle
 
@@ -85,7 +92,7 @@ class wave_detect:
             cv_image = bridge.imgmsg_to_cv2(msg, 'bgr8')
         except CvBridgeError as e:
             print (e)
-        self.detect(cv_image)
+        self.face_detect(cv_image)
     
     def face_detect(self, cv_image):
         cv_image = cv2.resize(cv_image, (640, 480))
@@ -95,6 +102,7 @@ class wave_detect:
         detector  = dlib.get_frontal_face_detector()
         #利用检测器检测人脸
         rects = detector(gray_image, 2)
+        print ("The Number of face detected is: {}".format(len(rects)))
         handRectangles=[]
         #获得人脸在图像中的位置之后，将人脸两侧区域放大，然后在这个放大了的区域内检测手部
         for rect in rects:
@@ -103,22 +111,17 @@ class wave_detect:
         self.openpose_hand_detect(handRectangles, cv_image)
     
     def openpose_hand_detect(self, handRectangles, cv_image):
-        # Starting OpenPose
-        opWrapper = op.WrapperPython()
-        opWrapper.configure(self.params)
-        opWrapper.start()
-
         # Create new datum
         datum = op.Datum()
         datum.cvInputData = cv_image
         datum.handRectangles = handRectangles
 
         # Process and display image
-        opWrapper.emplaceAndPop([datum])
+        self.opWrapper.emplaceAndPop([datum])
         print("Left hand keypoints: \n" + str(datum.handKeypoints[0]))
         print("Right hand keypoints: \n" + str(datum.handKeypoints[1]))
-        cv2.imshow("OpenPose 1.4.0 - Tutorial Python API", datum.cvOutputData)
-        cv2.waitKey(0)
+        #cv2.imshow("wave detect result", datum.cvOutputData)
+        #Scv2.waitKey(0)
 
 if __name__ == '__main__':
     rospy.init_node('wave_detect')
@@ -127,7 +130,7 @@ if __name__ == '__main__':
     try:
         wave_detect()
     except:
-        print ("Please check __init__ function")
+        print ("Please check file paths in __init__ function")
     rospy.spin()
 
 
