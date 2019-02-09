@@ -3,7 +3,7 @@ Date： 2018/12/12
 Author: Xu Yucheng
 使用PCL来检测机器人面前的门是否打开，检测当前画面中点云的数目
 Astra PRO大概在离门34cm之内检测到点云数目为0
-若门打开可以判断100帧内
+若门打开可以判断100帧内检测到的点云数目是否大于90000
 */
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
@@ -21,7 +21,6 @@ Astra PRO大概在离门34cm之内检测到点云数目为0
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
-
 #include <boost/thread/thread.hpp>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
@@ -37,169 +36,136 @@ Astra PRO大概在离门34cm之内检测到点云数目为0
 #include <pcl_ros/filters/voxel_grid.h>
 #include <pcl/filters/passthrough.h>
 
-#include <unistd.h>
-
-//namespace
 using namespace std;
 using namespace cv;
 using namespace pcl;
 
-//定义ros的发布器与订阅器
-/*
-
-设想场景是机器人开始任务时需要进门，在接受到“start“消息之后，检测门是否已经打开
-如果门是关闭状态则通过语音说出“Please help me open the door”
-以及："if the door is opened please say 'Jack the door is open'"
-语音识别'Jack'以及'open'关键词后向这个节点发布消息"door_open"
-*/
-ros::Publisher door_pub;
-ros::Subscriber speech_sub;
-ros::Subscriber pcl_sub;
-ros::Subscriber rgb_sub;
-
-pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_frame (new pcl::PointCloud<pcl::PointXYZ>);
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb (new pcl::PointCloud<pcl::PointXYZRGB>);
-pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZI>);
-
-std::string PCD_DIR = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files";\
-std::string PCL_TOPIC_NAME = "/camera/depth/points";
-std::string RGB_TOPIC_NAME = "/image_raw";
-bool door_closed = false;
-bool door_opened = false;
-int step = 0;
-
-void pclCallback(const sensor_msgs::PointCloud2& msg)
+class door_detect
 {
-    pcl::fromROSMsg(msg, *cloud_frame);
+private:
+    // flags
+    bool door_closed = false;
+    bool door_opened = false;
+    bool if_detect   = true;
+    int step = 0;
 
-    //首先剔除点云中Nan点
-    std::vector<int> mapping;
-    pcl::removeNaNFromPointCloud(*cloud_frame, *cloud_frame, mapping);
+    // subscriber & publisher
+    ros::Publisher door_pub;
+    ros::Subscriber image_sub;
+    ros::Subscriber pcl_sub;
+    ros::Subscriber speech_sub;
 
-    //对点云进行体素滤波下采样
-    pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_temp (new pcl::PointCloud<pcl::PointXYZI>);
-    pcl::copyPointCloud (*cloud_frame, *cloud_temp);
-    pcl::VoxelGrid<pcl::PointXYZI> sor;
-    sor.setInputCloud (cloud_temp);
-    sor.setLeafSize (0.01f, 0.01f, 0.01f);
-    sor.filter(*cloud_filtered);
+    // ros params
+    std::string sub_image_raw_topic_name;
+    std::string sub_pcl_topic_name;
+    std::string sub_speech_topic_name;
+    std::string pub_door_detect_topic_name;
+    std::string path_to_save_image;
 
-    int num = cloud_filtered->points.size();
+    // pcl container
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_frame (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb (new pcl::PointCloud<pcl::PointXYZRGB>);
+    pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_filter (new pcl::PointCloud<pcl::PointXYZI>);
 
-    if (num <= 90000)
+    void speechCallback (const std_msgs::StringConstPtr& msg)
     {
-        door_closed = true;
-        step ++;
-    }
-    else 
-    {
-        door_opened = true;
-        step ++;
-    }
-
-    std::cout << "Current Point Number is: ";
-    std::cout << num << std::endl;
-}
-
-void speechCallback (const std_msgs::StringConstPtr& msg)
-{
     /*
     @TODO
     此处根据需要添加对来自语音节点的信息的处理
+    添加一个if_detect的bool型变量，在接受到语音节点发过来的消息之后开始进行门的检测
+    如果检测到门已经打开，则将if_detect置为false，停止对门的检测
     */
-}
+    }
 
-void imageCallback(const sensor_msgs::ImageConstPtr& msg)
-{
-    cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-    cv::Mat img = cv_ptr -> image;
-
-    //检测到门是关闭的保存一次数据
-    if (door_closed && step==1)
+    void pclCallback (const sensor_msgs::PointCloud2& msg)
     {
-        //std::cout << "Now the door is closed" << endl;
-        ROS_INFO ("Door is Closed");
-        ROS_INFO ("Writing RGB image");
-        std::string FILE_NAME = "/door_closed";
-        std::string RGB_FULL_PATH = PCD_DIR + FILE_NAME + ".png";
-        cv::imwrite(RGB_FULL_PATH, img);
+        // 将ros消息类型的点云转化为pcl格式
+        pcl::fromROSMsg (msg, *cloud_frame);
+        // 剔除Nan点
+        std::vector<int> mapping;
+        pcl::removeNaNFromPointCloud (*Cloud_frame, *Cloud_frame, mapping);
+        // 对点云进行体素滤波下采样
+        pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_temp (new pcl::PointCloud<pcl::PointXYZI>);
+        pcl::copyPointCloud (*cloud_frame, *cloud_temp);
+        pcl::VoxelGrid<pcl::PointXYZI> sor;
+        sor.setInputCloud (cloud_temp);
+        sor.setLeafSize (0.01f, 0.01f, 0.01f);
+        sor.filter(*cloud_filter);
 
-        //保存PCL数据
-        //将当前点云赋予RGB值之后再保存为PCD文件
-        pcl::PointXYZRGB temp_point;
-
-        ROS_INFO("Writing PCD files");
-        for (int m = 0; m<img.rows; m++)
+        int point_num = cloud_filter->points.size();
+        if (if_detect)
         {
-            for (int n = 0; n<img.cols; n++)
+            if (num <= 90000)
             {
-                temp_point.b = img.ptr<uchar>(m,n)[0];
-                temp_point.g = img.ptr<uchar>(m,n)[1];
-                temp_point.r = img.ptr<uchar>(m,n)[2];
-
-                //取得深度数据
-                temp_point.x = cloud_frame->points[m*img.cols+n].x;
-                temp_point.y = cloud_frame->points[m*img.cols+n].y;
-                temp_point.z = cloud_frame->points[m*img.cols+n].z;
-                cloud_rgb->push_back(temp_point);
+                door_closed = true;
+            }
+            if (num >= 90000)
+            {
+                door_opened = true;
+                step ++;
             }
         }
-        std::string PCD_FULL_PATH = PCD_DIR + FILE_NAME + ".pcd";
-        pcl::io::savePCDFileASCII(PCD_FULL_PATH, *cloud_rgb);
-
-        //向语音节点发送"door_closed"信息
-        std_msgs::String door_flag;
-        door_flag.data = "door_closed";
-        door_pub.publish(door_flag);
-
-        door_closed = false;
+        
+        printf ("Current Point Number is %d", point_num);
     }
-    else if (door_opened && step==2)
+
+    void imageCallback (const sensor_msgs::ImageConstPtr& msg)
     {
-        sleep(3);
-        //std::cout << "Now the door is closed" << endl;
-        ROS_INFO ("Writing RGB image");
-        std::string FILE_NAME = "/door_opened";
-        std::string RGB_FULL_PATH = PCD_DIR + FILE_NAME + ".png";
-        cv::imwrite(RGB_FULL_PATH, img);
+        // 使用cv_bridge将ros格式的图像信息转化为opencv格式
+        cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy (msg, sensor_msgs::image_encodings::BGR8);
+        cv::Mat img = cv_ptr -> image;
 
-        //保存PCL数据
-        //将当前点云赋予RGB值之后再保存为PCD文件
-        pcl::PointXYZRGB temp_point;
-
-        ROS_INFO("Writing PCD files");
-        for (int m = 0; m<img.rows; m++)
+        // 当检测到门是关闭的则保存一次数据
+        if (door_closed)
         {
-            for (int n = 0; n<img.cols; n++)
-            {
-                temp_point.b = img.ptr<uchar>(m,n)[0];
-                temp_point.g = img.ptr<uchar>(m,n)[1];
-                temp_point.r = img.ptr<uchar>(m,n)[2];
-
-                //取得深度数据
-                temp_point.x = cloud_frame->points[m*img.cols+n].x;
-                temp_point.y = cloud_frame->points[m*img.cols+n].y;
-                temp_point.z = cloud_frame->points[m*img.cols+n].z;
-                cloud_rgb->push_back(temp_point);
-            }
+            std::string FILE_NAME = "/door_closed.png";
+            std::string full_path = door_detect::path_to_save_image + FILE_NAME;
+            cv::imwrite (full_path, img);
         }
-        std::string PCD_FULL_PATH = PCD_DIR + FILE_NAME + ".pcd";
-        pcl::io::savePCDFileASCII(PCD_FULL_PATH, *cloud_rgb);
-        door_opened = false;
+
+        if (door_opened && step>=100)
+        {
+            ROS_INFO ("Now the door is opened");
+            std::string FILE_NAME = "/door_opened.png";
+            std::string full_path = door_detect::path_to_save_image + FILE_NAME;
+            cv::imwrite (full_path, img);
+            
+            if_detect = false;
+            //由发布器向外部发布门已经打开了的消息
+            std_msgs::String flag;
+            flag.data = "door_is_open";
+            door_detect::door_pub.publish (flag);
+        }
     }
-}
 
-int main(int argc, char** argv)
+public:
+    int run (int argc, char** argv)
+    {
+        // 初始化ROS节点
+        ros::init (argc, argv, "door_detect");
+        ros::NodeHandle nh;
+        ROS_INFO ("----------INIT----------");
+        ROS_INFO ("----Waiting for image----");
+
+        // 从ROS param参数服务器中获取参数
+        nh.param<std::string> ("sub_image_raw_topic_name"   , sub_image_raw_topic_name   , "/image_raw");
+        nh.param<std::string> ("sub_pcl_topic_name"         , sub_pcl_topic_name         , "/camera/depth/points");
+        nh.param<std::string> ("sub_speech_topic_name"      , sub_speech_topic_name      , "/kamerider_speech/speech_output");
+        nh.param<std::string> ("pub_door_detect_topic_name" , pub_door_detect_topic_name , "/kamerider_image/door_detect");
+        nh.param<std::string> ("path_to_save_image"         , path_to_save_image         , "/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/result");
+
+        // 定义发布器和订阅器
+        door_pub   = nh.advertise<std_msgs::String> (door_detect::pub_door_detect_topic_name, 1);
+        speech_sub = nh.subscribe (door_detect::sub_speech_topic_name, 1, &door_detect::speechCallback, this);
+        image_sub  = nh.subscribe (door_detect::sub_image_raw_topic_name, 1, &door_detect::imageCallback, this);
+        pcl_sub    = nh.subscribe (door_detect::sub_pcl_topic_name, 1, &door_detect::pclCallback, this);
+
+        ros::spin();
+    }
+};
+
+int main (int argc, char** argv)
 {
-    ros::init(argc, argv, "door_detect");
-    ros::NodeHandle nh;
-
-    door_pub   = nh.advertise<std_msgs::String>("/pcl2nav", 1);
-    speech_sub = nh.subscribe("/speech2pcl", 1, speechCallback);
-    pcl_sub = nh.subscribe("/camera/depth/points", 1, pclCallback);
-    rgb_sub = nh.subscribe("/image_raw", 1, imageCallback);
-
-    ros::spin();
-    return 0;
+    door_detect detector;
+    return detector.run (argc, argv);
 }
-
