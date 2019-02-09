@@ -39,7 +39,7 @@ class face_detection:
         #ROS param参数服务器中取得参数值
         self.keypoint_detect               = rospy.get_param('keypoint_detect',               False)
         self.sub_image_raw_topic_name      = rospy.get_param('sub_image_raw_topic_name',      '/image_raw')
-        self.pub_face_detection_topic_name = rospy.get_param('pub_face_detection_topic_name', '/kamerider_image_detection/face_detection')
+        self.pub_face_detection_topic_name = rospy.get_param('pub_face_detection_topic_name', '/kamerider_image/face_detection')
         self.path_to_pretrained_dataset    = rospy.get_param('path_to_pretrained_dataset',    '/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/dataset/shape_predictor_68_face_landmarks.dat')
         self.path_to_save_image            = rospy.get_param('path_to_save_image',            '/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/result/face_detection_result.png')
         
