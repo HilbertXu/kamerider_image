@@ -43,7 +43,7 @@ class gender_recognition:
     def get_params(self):
         self.sub_image_raw_topic_name          = rospy.get_param('sub_image_raw_topic_name',          '/image_raw')
         self.sub_take_photo_signal_topic_name  = rospy.get_param('sub_take_photo_signal_topic_name',  '/take_photo_signal')
-        self.pub_gender_recognition_topic_name = rospy.get_param('pub_gender_recognition_topic_name', '/kamerider_image_detection/gender_recognition')
+        self.pub_gender_recognition_topic_name = rospy.get_param('pub_gender_recognition_topic_name', '/kamerider_image/gender_recognition')
         self.path_to_save_image                = rospy.get_param('path_to_save_image',                '/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/test_images/image_capture.jpg')
         self.path_to_save_result               = rospy.get_param('path_to_save_result',               '/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/result/gender_recognition_result.jpg')     
         #定义R发布器和订阅器，话题名通过ROS PARAM参数服务器获取
