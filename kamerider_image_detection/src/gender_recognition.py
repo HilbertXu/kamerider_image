@@ -123,7 +123,7 @@ class gender_recognition:
         cv2.imwrite(self.path_to_save_result, cv_image)
         self.pub_result.publish(gender_message)
         cv2.imshow('result', cv2.imread(self.path_to_save_result))
-        cv2.waitKey(0)
+        cv2.waitKey(100)
 
 if __name__ == '__main__':
     #初始化节点

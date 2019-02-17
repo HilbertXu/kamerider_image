@@ -120,8 +120,8 @@ class wave_detect:
         self.opWrapper.emplaceAndPop([datum])
         print("Left hand keypoints: \n" + str(datum.handKeypoints[0]))
         print("Right hand keypoints: \n" + str(datum.handKeypoints[1]))
-        #cv2.imshow("wave detect result", datum.cvOutputData)
-        #Scv2.waitKey(0)
+        cv2.imshow("wave detect result", datum.cvOutputData)
+        cv2.waitKey(100)
 
 if __name__ == '__main__':
     rospy.init_node('wave_detect')

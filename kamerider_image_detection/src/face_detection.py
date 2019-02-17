@@ -116,8 +116,8 @@ class face_detection:
                         1, (0,0,255), thickness=2
                         )
             cv2.imwrite(self.path_to_save_image, cv_image)
-            #cv2.imshow("face_detection", cv_image)
-            #cv2.waitKey(0)
+            cv2.imshow("face_detection", cv_image)
+            cv2.waitKey(100)
         
         else:
             for (i, rect) in enumerate(rects):
@@ -127,8 +127,8 @@ class face_detection:
                     (bbox[2], bbox[3]), (0,0,255)
                     )
             cv2.imwrite(self.path_to_save_image, cv_image)
-            #cv2.imshow("face_detection", cv_image)
-            #cv2.waitKey(0)
+            cv2.imshow("face_detection", cv_image)
+            cv2.waitKey(100)
         self.publishMessage(rects)
 
 if __name__ == '__main__':

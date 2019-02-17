@@ -40,6 +40,11 @@ using namespace std;
 using namespace cv;
 using namespace pcl;
 
+// pcl container
+pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_frame (new pcl::PointCloud<pcl::PointXYZ>);
+pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb (new pcl::PointCloud<pcl::PointXYZRGB>);
+pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_filter (new pcl::PointCloud<pcl::PointXYZI>);
+
 class door_detect
 {
 private:
@@ -62,11 +67,7 @@ private:
     std::string pub_door_detect_topic_name;
     std::string path_to_save_image;
 
-    // pcl container
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_frame (new pcl::PointCloud<pcl::PointXYZ>);
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb (new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_filter (new pcl::PointCloud<pcl::PointXYZI>);
-
+    
     void speechCallback (const std_msgs::StringConstPtr& msg)
     {
     /*
@@ -83,7 +84,7 @@ private:
         pcl::fromROSMsg (msg, *cloud_frame);
         // 剔除Nan点
         std::vector<int> mapping;
-        pcl::removeNaNFromPointCloud (*Cloud_frame, *Cloud_frame, mapping);
+        pcl::removeNaNFromPointCloud (*cloud_frame, *cloud_frame, mapping);
         // 对点云进行体素滤波下采样
         pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_temp (new pcl::PointCloud<pcl::PointXYZI>);
         pcl::copyPointCloud (*cloud_frame, *cloud_temp);
@@ -95,11 +96,11 @@ private:
         int point_num = cloud_filter->points.size();
         if (if_detect)
         {
-            if (num <= 90000)
+            if (point_num <= 90000)
             {
                 door_closed = true;
             }
-            if (num >= 90000)
+            if (point_num >= 90000)
             {
                 door_opened = true;
                 step ++;
