@@ -168,6 +168,12 @@ include_directories(
 #sample
 # add_executable(example.bin example.cpp)
 # target_link_libraries(example.bin ${OpenPose_LIBS} ${GFLAGS_LIBRARY} ${GLOG_LIBRARY} ${OpenCV_LIBS})
+# add_executable (openpose_ros src/openpose_ros.cpp)
+# target_link_libraries(openpose_ros ${OpenPose_LIBS} ${GFLAGS_LIBRARY} ${GLOG_LIBRARY} ${OpenCV_LIBS})
+
+
+
+
 #############
 ## Install ##
 #############

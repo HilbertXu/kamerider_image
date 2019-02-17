@@ -34,11 +34,65 @@ using namespace std;
 using namespace cv;
 using namespace op;
 
+// Display
+DEFINE_bool(no_display,                 false,
+    "Enable to disable the visual display.");
+
+// openpose 
+op::Wrapper opWrapper{op::ThreadManagerMode::Asynchronous};
+
 class openpose_ros
 {
 private:
+    // ros
     std::string sub_image_raw_topic_name;
     ros::Subscriber sub_image;
+
+    bool display(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>>& datumsPtr)
+    {
+        try
+        {
+            // User's displaying/saving/other processing here
+                // datum.cvOutputData: rendered frame with pose or heatmaps
+                // datum.poseKeypoints: Array<float> with the estimated pose
+            if (datumsPtr != nullptr && !datumsPtr->empty())
+            {
+                // Display image and sleeps at least 1 ms (it usually sleeps ~5-10 msec to display the image)
+                cv::imshow(OPEN_POSE_NAME_AND_VERSION + " - Tutorial C++ API", datumsPtr->at(0)->cvOutputData);
+            }
+            else
+                op::log("Nullptr or empty datumsPtr found.", op::Priority::High);
+            const auto key = (char)cv::waitKey(1);
+            return (key == 27);
+        }
+        catch (const std::exception& e)
+        {
+            op::error(e.what(), __LINE__, __FUNCTION__, __FILE__);
+            return true;
+        }
+    }
+
+    void printKeypoints(const std::shared_ptr<std::vector<std::shared_ptr<op::Datum>>>& datumsPtr)
+    {
+        try
+        {
+            // Example: How to use the pose keypoints
+            if (datumsPtr != nullptr && !datumsPtr->empty())
+            {
+                op::log("Body keypoints: " + datumsPtr->at(0)->poseKeypoints.toString(), op::Priority::High);
+                op::log("Face keypoints: " + datumsPtr->at(0)->faceKeypoints.toString(), op::Priority::High);
+                op::log("Left hand keypoints: " + datumsPtr->at(0)->handKeypoints[0].toString(), op::Priority::High);
+                op::log("Right hand keypoints: " + datumsPtr->at(0)->handKeypoints[1].toString(), op::Priority::High);
+            }
+            else
+                op::log("Nullptr or empty datumsPtr found.", op::Priority::High);
+        }
+        catch (const std::exception& e)
+        {
+            op::error(e.what(), __LINE__, __FUNCTION__, __FILE__);
+        }
+    }
+
 
     void configureWrapper(op::Wrapper& opWrapper)
     {
@@ -131,60 +185,80 @@ private:
     void imageCallback (const sensor_msgs::ImageConstPtr& msg)
     {
         cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
-        cv::Mat img = cv_ptr->image;
+        cv::Mat imageToProcess = cv_ptr->image;
+        try
+        {
+            const auto opTimer = op::getTimerInit();
+            auto datumProcessed = opWrapper.emplaceAndPop(imageToProcess);
+            if (datumProcessed != nullptr)
+            {
+                printKeypoints (datumProcessed);
+                if (!FLAGS_no_display)
+                {
+                    const auto userWantsToExit = display(datumProcessed);
+                    if (userWantsToExit)
+                    {
+                        op::log("User pressed Esc to exit demo.", op::Priority::High);
+                    }
+                }
+                else
+                    op::log("The images in this topic cannot be processed", op::Priority::High);
+            }
+            // Measuring total time
+            op::printTime(opTimer, "Time to process current image is: ", " seconds.", op::Priority::High);
+            return 0;
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }    
     }
 
-    int tutorialApiCpp()
+    int initOpenpose ()
     {
         try
         {
             op::log("Starting OpenPose demo...", op::Priority::High);
-            const auto opTimer = op::getTimerInit();
-
             // Configuring OpenPose
             op::log("Configuring OpenPose...", op::Priority::High);
-            op::Wrapper opWrapper{op::ThreadManagerMode::Asynchronous};
             configureWrapper(opWrapper);
-
             // Starting OpenPose
             op::log("Starting thread(s)...", op::Priority::High);
             opWrapper.start();
-
-            // Read frames on directory
-            const auto imagePaths = op::getFilesOnDirectory(FLAGS_image_dir, op::Extensions::Images);
-
-            // Process and display images
-            for (const auto& imagePath : imagePaths)
-            {
-                const auto imageToProcess = cv::imread(imagePath);
-                auto datumProcessed = opWrapper.emplaceAndPop(imageToProcess);
-                if (datumProcessed != nullptr)
-                {
-                    printKeypoints(datumProcessed);
-                    if (!FLAGS_no_display)
-                    {
-                        const auto userWantsToExit = display(datumProcessed);
-                        if (userWantsToExit)
-                        {
-                            op::log("User pressed Esc to exit demo.", op::Priority::High);
-                            break;
-                        }
-                    }
-                }
-                else
-                    op::log("Image " + imagePath + " could not be processed.", op::Priority::High);
-            }
-
-            // Measuring total time
-            op::printTime(opTimer, "OpenPose demo successfully finished. Total time: ", " seconds.", op::Priority::High);
-
-            // Return
-            return 0;
         }
-        catch (const std::exception& e)
+        catch(const std::exception& e)
         {
+            op::log("Cannot initialize openpose wrapper...", op::Priority::High);
             return -1;
         }
     }
+
+public:
+    int run(int argc, char** argv)
+    {
+        try
+        {
+            ros::init (argc, argv, "openpose_ros");
+            ros::NodeHandle nh;
+            ROS_INFO("----------INIT----------");
+            openpose_ros::initOpenpose();
+
+            nh.param <std::string>("sub_image_raw_topic_name", sub_image_raw_topic_name, "/image_raw");
+
+            sub_image = nh.subscribe (sub_image_raw_topic_name, 1, &openpose_ros::imageCallback, this);
+            ros::spin();
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+        
+    }
 };
 
+int main (int argc, char** argv)
+{
+    gflags::ParseCommandLineFlags (&argc, &argv, true);
+    openpose_ros OPAros;
+    return OPAros.run (argc, argv);
+}
