@@ -12,6 +12,7 @@ import math
 import dlib
 import rospy
 import roslib
+import timeit
 import base64
 import numpy as np
 from std_msgs.msg import Int8
@@ -22,7 +23,19 @@ from cv_bridge import CvBridge, CvBridgeError
 from kamerider_image_msgs.msg import BoundingBox
 from kamerider_image_msgs.msg import FaceDetection
 
+#一个写成装饰器形式的计时器，在函数前加@clock便可以输出每次调用该函数运行时间
+def clock(func):
+    def clocked(*args):
+        t0 = timeit.default_timer()
+        result = func(*args)
+        elapsed = timeit.default_timer() - t0
+        name = func.__name__
+        arg_str = ', '.join(repr(arg) for arg in args)
+        print('[%0.8fs] %s(%s) -> %r' % (elapsed, name, arg_str, result))
+        return result
+    return clocked
 class face_detection:
+    @clock
     def __init__(self):
         self.keypoint_detect               = None
         #将dlib识别出来的关键点的shape转换成numpy矩阵的格式，方便之后进行调用
@@ -32,13 +45,16 @@ class face_detection:
         self.path_to_pretrained_dataset    = None
         self.path_to_save_image            = None
         self.pub_result                    = None
+        #实例化检测器
+        self.detector                      = dlib.get_frontal_face_detector()
         self.message                       = FaceDetection()
         self.get_params()
     
+    @clock
     def get_params(self):
         #ROS param参数服务器中取得参数值
         self.keypoint_detect               = rospy.get_param('keypoint_detect',               False)
-        self.sub_image_raw_topic_name      = rospy.get_param('sub_image_raw_topic_name',      '/image_raw')
+        self.sub_image_raw_topic_name      = rospy.get_param('sub_image_raw_topic_name',      '/camera/rgb/image_raw')
         self.pub_face_detection_topic_name = rospy.get_param('pub_face_detection_topic_name', '/kamerider_image/face_detection')
         self.path_to_pretrained_dataset    = rospy.get_param('path_to_pretrained_dataset',    '/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/dataset/shape_predictor_68_face_landmarks.dat')
         self.path_to_save_image            = rospy.get_param('path_to_save_image',            '/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/result/face_detection_result.png')
@@ -87,16 +103,15 @@ class face_detection:
     需要测试在实际情况下对人脸应该进行几次上采样，才能获得更好地识别效果
     修改rects = detector(gray_image, 2)第二个参数
     在测试图片中，一次上采样会有比较小的人脸无法识别的情况
-    两次上采样可以很好地解决这个问题，但是相比之下识别速度会减慢很多
+    两次上采样可以很好地解决这个问题，但是相比之下识别速度会减慢很多,会有非常大的延迟
     '''
+    #@clock              
     def detection(self, cv_image):
         cv_image = cv2.resize(cv_image, (640, 480))
         #图片灰度化
         gray_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-        #实例化检测器
-        detector  = dlib.get_frontal_face_detector()
         #利用检测器检测人脸
-        rects = detector(gray_image, 2)
+        rects = self.detector(gray_image, 1)
         print ("The Number of face detected is: {}".format(len(rects)))
         #检测是否需要进行关键点检测
         if self.keypoint_detect:
@@ -117,7 +132,7 @@ class face_detection:
                         )
             cv2.imwrite(self.path_to_save_image, cv_image)
             cv2.imshow("face_detection", cv_image)
-            cv2.waitKey(100)
+            cv2.waitKey(1)
         
         else:
             for (i, rect) in enumerate(rects):
@@ -128,7 +143,7 @@ class face_detection:
                     )
             cv2.imwrite(self.path_to_save_image, cv_image)
             cv2.imshow("face_detection", cv_image)
-            cv2.waitKey(100)
+            cv2.waitKey(1)
         self.publishMessage(rects)
 
 if __name__ == '__main__':
