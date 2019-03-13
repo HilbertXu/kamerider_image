@@ -115,16 +115,8 @@ private:
         // 使用cv_bridge将ros格式的图像信息转化为opencv格式
         cv_bridge::CvImagePtr cv_ptr = cv_bridge::toCvCopy (msg, sensor_msgs::image_encodings::BGR8);
         cv::Mat img = cv_ptr -> image;
-
-        // 当检测到门是关闭的则保存一次数据
-        if (door_closed)
-        {
-            std::string FILE_NAME = "/door_closed.png";
-            std::string full_path = door_detect::path_to_save_image + FILE_NAME;
-            cv::imwrite (full_path, img);
-        }
-
-        if (door_opened && step>=100)
+        
+        if (door_opened && step>=50)
         {
             ROS_INFO ("Now the door is opened");
             std::string FILE_NAME = "/door_opened.png";

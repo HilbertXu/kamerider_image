@@ -1,5 +1,5 @@
 /*
-!!!!CODE FOR TEST USEs
+!!!!CODE FOR TEST USE
 Date: 2019/1/31
 Author: Xu Yucheng
 Abstract: Read a image and send it as ros message
