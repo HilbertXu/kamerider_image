@@ -292,7 +292,7 @@ int main(int argc, char **argv)
 
 	std::cout << "Loading " << argv[2];
 	//记录读取的PCD文件的路径
-	std::string dir = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/"; 
+	std::string dir = "/home/nvidia/catkin_ws/src/image_pcl/pcd_files/"; 
   	std::string filename = argv[2];
 
 	//使用pcl_io端口读取PCD文件

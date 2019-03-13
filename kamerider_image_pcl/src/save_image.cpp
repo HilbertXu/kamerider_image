@@ -24,7 +24,7 @@ using namespace cv;
 
 ros::Subscriber img_sub;
 
-std::string DATASET_DIR = "/home/kamerider/darknet/RoboCup_2019/dataset/JPEGImages/";
+std::string DATASET_DIR = "/home/nvidia/darknet/RoboCup_2019/dataset/JPEGImages/";
 
 int pCount = 3;
 

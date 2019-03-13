@@ -36,7 +36,7 @@ using namespace cv;
 //定义全局变量来储存接受到的点云
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_frame (new pcl::PointCloud<pcl::PointXYZ>);
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb (new pcl::PointCloud<pcl::PointXYZRGB>);
-string PCD_PATH = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files";
+string PCD_PATH = "/home/nvidia/catkin_ws/src/image_pcl/pcd_files";
 string PCL_TOPIC_NAME;
 string RGB_TOPIC_NAME;
 

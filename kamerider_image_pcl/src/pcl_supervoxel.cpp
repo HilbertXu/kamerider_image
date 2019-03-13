@@ -22,7 +22,7 @@ typedef pcl::PointCloud<PointNT> PointNCloudT;
 typedef pcl::PointXYZL PointLT;
 typedef pcl::PointCloud<PointLT> PointLCloudT;
 
-std::string PCD_DIR = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files";
+std::string PCD_DIR = "/home/nvidia/catkin_ws/src/image_pcl/pcd_files";
 
 void addSupervoxelConnectionsToViewer (PointT &supervoxel_center,
                                        PointCloudT &adjacent_supervoxel_centers,
