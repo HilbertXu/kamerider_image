@@ -15,11 +15,6 @@ find_package(OpenCV)
 find_package(OpenPose REQUIRED)
 
 find_package(OpenCV REQUIRED)
-find_package(PCL 1.9 REQUIRED)
-set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARIES})
-add_definitions(${PCL_DEFINITIONS})
 
 find_package(dlib REQUIRED)
 set(dlib_INCLUDE_DIRS /usr/local/include/dlib)
