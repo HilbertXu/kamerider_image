@@ -203,6 +203,9 @@ target_link_libraries(dlib_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_L
 add_executable(msg_test src/msg_test.cpp)
 target_link_libraries(msg_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
 
+add_executable(object_detection src/object_detection.cpp)
+target_link_libraries(object_detection ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 #############
 ## Install ##
 #############

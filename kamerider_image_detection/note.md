@@ -31,3 +31,19 @@
 3. C++节点类内回调函数的调用（eg: face_detection.cpp）
 
 4. dlib的相关用法，dlib在检测人脸时存在速度较慢的情况
+
+5. Object detection 节点使用
+
+   依次运行：
+
+   roslaunch turtlebot_bringup minimal.launch
+
+   roslaunch astra_launch astra.launch
+
+   roslaunch darknet_ros darknet_ros.launch
+
+   rosrun kamerider_image_detection object_detection
+
+   rostopic pub /kamerider_navigation/nav_pub std_msgs/String "in_grasp_position"
+
+   就可以看到检测出物体的画面，以及选取的点，现在问题是tf变换的变换矩阵有明显问题，以及最后选取估计点的时候，因为需要寻找valid point，导致真实选取的点和由bounding_box确定的点偏差较大。

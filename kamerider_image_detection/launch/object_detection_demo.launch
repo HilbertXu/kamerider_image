@@ -1,0 +1,9 @@
+<launch>
+    <include file="$(find turtlebot_bringup)/launch/minimal.launch"/>
+    <include file="$(find astra_launch)/launch/astra.launch" />
+    <include file="$(find darknet_ros)/launch/darknet_ros.launch" />
+		
+
+    <node name="object_detection" pkg="kamerider_image_detection" type="object_detection" output="screen" />
+
+</launch>
