@@ -198,6 +198,18 @@ target_link_libraries(dlib_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_L
 add_executable(msg_test src/msg_test.cpp)
 target_link_libraries(msg_test ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
 
+add_executable(object_detection src/object_detection.cpp)
+target_link_libraries(object_detection ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(tf_listener src/tf_listener.cpp)
+target_link_libraries(tf_listener ${catkin_LIBRARIES})
+
+add_executable(tf_talker src/tf_talker.cpp)
+target_link_libraries(tf_talker ${catkin_LIBRARIES})
+
+add_executable(object_detection_on_mouse src/object_detection_on_mouse.cpp)
+target_link_libraries(object_detection_on_mouse ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
 #############
 ## Install ##
 #############
