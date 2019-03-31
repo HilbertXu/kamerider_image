@@ -58,18 +58,20 @@ class wave_detect:
         
     def get_params(self):
         #ROS param参数服务器中取得参数值
-        self.sub_image_raw_topic_name      = rospy.get_param('sub_image_raw_topic_name',      '/camera/rgb/image_raw')
+        self.sub_image_raw_topic_name      = rospy.get_param('sub_image_raw_topic_name',      '/astra/rgb/image_raw')
         self.pub_wave_detect_topic_name    = rospy.get_param('pub_wave_detect_topic_name',    '/kamerider_image/wave_detect')
-        self.path_to_save_image            = rospy.get_param('path_to_save_image',            '/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/result/wave_detect_result.png')
+        self.path_to_save_image            = rospy.get_param('path_to_save_image',            '/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_detection/result/wave_detect_result.png')
         self.pub_turn_robot_command        = rospy.get_param('pub_turn_robot_command',        '/kamerider_navigation/turn_robot_server')
         #发布器和订阅器
         rospy.Subscriber(self.sub_image_raw_topic_name, Image, self.imageCallback)
         self.pub_result = rospy.Publisher(self.pub_wave_detect_topic_name, String, queue_size=1)
         #设置openpose手部特征点检测时的参数
-        self.params["model_folder"] = "/home/kamerider/openpose/models"
+        self.params["model_folder"] = "/home/nvidia/openpose/models"
         self.params["hand"] = True
+	self.params["hand_net_resolution"] = "16x16"
         self.params["hand_detector"] = 2
-        self.params["body_disable"] = True
+	#self.params["body_disable"] = True
+	
 
     def rect_to_bbox(self, rect):
         '''
@@ -168,7 +170,7 @@ class wave_detect:
             self.pub_result.publish("No hand detected")
             
         cv2.imshow("wave detect result", datum.cvOutputData)
-        cv2.imwrite("/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/result/wave_detect_result.png", datum.cvOutputData)
+        cv2.imwrite("/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_detection/result/wave_detect_result.png", datum.cvOutputData)
         cv2.waitKey(1)
 
 if __name__ == '__main__':
