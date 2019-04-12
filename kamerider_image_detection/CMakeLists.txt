@@ -207,8 +207,8 @@ target_link_libraries(tf_listener ${catkin_LIBRARIES})
 add_executable(tf_talker src/tf_talker.cpp)
 target_link_libraries(tf_talker ${catkin_LIBRARIES})
 
-add_executable(object_detection_on_mouse src/object_detection_on_mouse.cpp)
-target_link_libraries(object_detection_on_mouse ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(person_detection src/person_detection.cpp)
+target_link_libraries(person_detection ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #############
 ## Install ##

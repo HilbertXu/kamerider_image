@@ -1,0 +1,2 @@
+string mission_type
+string mission_name

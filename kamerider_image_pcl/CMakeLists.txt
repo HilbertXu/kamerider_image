@@ -170,7 +170,11 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+add_executable(save_pcl_as_pcd src/save_pcl_as_pcd.cpp)
+target_link_libraries(save_pcl_as_pcd ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
 
+add_executable(save_image src/save_image.cpp)
+target_link_libraries(save_image ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
 
 
 #############

@@ -19,6 +19,7 @@ add_message_files(
     FaceDetection.msg
     GenderDetection.msg
     ObjectPosition.msg
+    mission.msg
 )
 
 # add_action_files(

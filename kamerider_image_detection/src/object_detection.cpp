@@ -38,6 +38,7 @@
 #include <darknet_ros_msgs/BoundingBoxes.h>
 #include <kamerider_image_msgs/ObjectPosition.h>
 #include <kamerider_navigation/turn_robotAction.h>
+#include <kamerider_speech/mission.h>
 
 using namespace std;
 using namespace pcl;
@@ -52,6 +53,7 @@ unsigned char floatBuffer[4];
 bool find_object = false;
 bool adjust_robot = false;
 bool in_position = false;
+bool pub_obj_position = false;
 int camera_width = 640;
 int camera_height = 480;
 int center_x = 0;
@@ -88,6 +90,8 @@ private:
     std::string sub_image_raw_topic_name;
     std::string sub_cam_info_topic_name;
     std::string sub_nav_topic_name;
+    std::string sub_speech_topic_name;
+    
     std::string pub_object_pos_topic_name;
     std::string pub_tf_pcl_topic_name;
 
@@ -97,6 +101,7 @@ private:
     ros::Subscriber cam_sub;
     ros::Subscriber nav_sub;
     ros::Subscriber img_sub;
+    ros::Subscriber speech_sub;
     ros::Publisher obj_pub;
     ros::Publisher pcl_pub;
 
@@ -104,9 +109,8 @@ private:
     std::string CAMERA_DEPTH_FRAME = "astra_depth_frame";
     std::string TURTLEBOT_BASE_FRAME = "base_link";
 
-    // @TODO 
-    // 测试时使用orange juice这个名称，在正式使用中需要修改为接受语音节点发过来的识别结果
-    std::string object_name = "Orange Juice";
+    // 定义待抓取的物体的名称，初始化为None
+    std::string object_name = "Cola";
     
     int find_near_valid(int idx)
     {   
@@ -138,6 +142,14 @@ private:
 
     // @TODO 完成机器人朝向的微调代码
     void adjust_robot_orientation();
+
+    void speechCallback(const kamerider_speech::mission &msg)
+    {
+        if (msg.mission_type == "object")
+        { 
+           object_name = msg.mission_name; 
+        }
+    }
 
     // @TODO 完成导航部分的通信
     void navCallback(const std_msgs::String::ConstPtr& msg)
@@ -184,24 +196,26 @@ private:
     
     void darknetCallback (darknet_ros_msgs::BoundingBoxes msg)
     {
-        if (msg.bounding_boxes.size() > 0 && !cloud_astra->empty())
+        if (object_name != "None")
         {
-            
-            for (int i=0; i<msg.bounding_boxes.size(); i++)
+            if (msg.bounding_boxes.size() > 0 && !cloud_astra->empty())
             {
-                if (msg.bounding_boxes[i].Class == object_name)
+                for (int i=0; i<msg.bounding_boxes.size(); i++)
                 {
-                    object_x = int ((msg.bounding_boxes[i].xmin + msg.bounding_boxes[i].xmax) / 2);
-                    object_y = int ((msg.bounding_boxes[i].ymin + msg.bounding_boxes[i].ymax) / 2);
-                    // Used for test
-                    // printf ("Detected %s Bounding_Boxes\n",object_name.c_str());
-                    // printf ("Bounding_Boxes %s=[Xmin Ymin Xmax Ymax]=[%d %d %d %d]\n", object_name.c_str(),
-                    // msg.bounding_boxes[i].xmin,
-                    // msg.bounding_boxes[i].ymin,
-                    // msg.bounding_boxes[i].xmax,
-                    // msg.bounding_boxes[i].ymax);
-                    //printf ("The center pixel of %s is: [row, col] = [%d, %d]\n", object_name.c_str(), object_x, object_y);
-                    find_object = true;
+                    if (msg.bounding_boxes[i].Class == object_name)
+                    {
+                        object_x = int ((msg.bounding_boxes[i].xmin + msg.bounding_boxes[i].xmax) / 2);
+                        object_y = int ((msg.bounding_boxes[i].ymin + msg.bounding_boxes[i].ymax) / 2);
+                        // Used for test
+                        // printf ("Detected %s Bounding_Boxes\n",object_name.c_str());
+                        // printf ("Bounding_Boxes %s=[Xmin Ymin Xmax Ymax]=[%d %d %d %d]\n", object_name.c_str(),
+                        // msg.bounding_boxes[i].xmin,
+                        // msg.bounding_boxes[i].ymin,
+                        // msg.bounding_boxes[i].xmax,
+                        // msg.bounding_boxes[i].ymax);
+                        //printf ("The center pixel of %s is: [row, col] = [%d, %d]\n", object_name.c_str(), object_x, object_y);
+                        find_object = true;
+                    }
                 }
             }
         }
@@ -227,9 +241,9 @@ private:
         }
         else
         {
-			geometry_msgs::PointStamped cam_pos;
-			geometry_msgs::PointStamped base_point;
-        	cam_pos.header.frame_id = "/astra_depth_optical_frame";
+            geometry_msgs::PointStamped cam_pos;
+            geometry_msgs::PointStamped base_point;
+            cam_pos.header.frame_id = "/astra_depth_optical_frame";
             origin_index = object_y * camera_width + object_x;
             kamerider_image_msgs::ObjectPosition pos;
             tf::TransformListener pListener;
@@ -246,7 +260,7 @@ private:
 				
                 try
                 {
-					pListener.waitForTransform("/astra_depth_optical_frame", "/base_link", ros::Time(0), ros::Duration(3.0));
+                    pListener.waitForTransform("/astra_depth_optical_frame", "/base_link", ros::Time(0), ros::Duration(3.0));
                     pListener.transformPoint("/base_link", cam_pos, base_point);
                     ROS_INFO("cam_point: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
                             cam_pos.point.x, cam_pos.point.y, cam_pos.point.z,
@@ -266,7 +280,7 @@ private:
                 cam_pos.point.z = cloud_astra->points[origin_index].z;
                 try
                 {
-					pListener.waitForTransform("/astra_depth_optical_frame", "/base_link", ros::Time(0), ros::Duration(3.0));
+                    pListener.waitForTransform("/astra_depth_optical_frame", "/base_link", ros::Time(0), ros::Duration(3.0));
                     pListener.transformPoint("/base_link", cam_pos, base_point);
                     ROS_INFO("cam_point: (%.2f, %.2f. %.2f) -----> base_link: (%.2f, %.2f, %.2f) at time %.2f",
                             cam_pos.point.x, cam_pos.point.y, cam_pos.point.z,
@@ -277,12 +291,17 @@ private:
                     ROS_ERROR("Received an exception trying to transform a point from \"astra_depth_optical_frame\" to \"base_link\": %s", ex.what());
                 }
             }
-	        
-            pos.header.frame_id = "/base_link";
-            pos.x = base_point.point.x;
-            pos.y = base_point.point.y;
-            pos.z = base_point.point.z;
-            obj_pub.publish (pos);
+            if (!pub_obj_position)
+            {
+                // 控制发布器只发布一次消息
+                pos.header.frame_id = "/base_link";
+                pos.x = base_point.point.x;
+                pos.y = base_point.point.y;
+                pos.z = base_point.point.z;
+                obj_pub.publish (pos);
+                pub_obj_position = true;
+            }
+            
         }
     }
 
@@ -299,6 +318,7 @@ public:
         nh.param<std::string>("sub_cam_info_topic_name",   sub_cam_info_topic_name,   "/astra/depth/info");
         nh.param<std::string>("sub_nav_topic_name",        sub_nav_topic_name,        "/kamerider_navigation/nav_pub");
         nh.param<std::string>("sub_image_raw_topic_name",  sub_image_raw_topic_name,  "/astra/rgb/image_raw");
+        nh.param<std::string>("sub_speech_topic_name",     sub_speech_topic_name,     "/speech_to_image");
         nh.param<std::string>("pub_object_pos_topic_name", pub_object_pos_topic_name, "/kamerider_image/object_position_base");
         nh.param<std::string>("pub_tf_pcl_topic_name",     pub_tf_pcl_topic_name,     "/base_link_pcl");
 
@@ -307,6 +327,7 @@ public:
         cam_sub = nh.subscribe(sub_cam_info_topic_name, 1, &object_detection::caminfoCallback, this);
         nav_sub = nh.subscribe(sub_nav_topic_name, 1, &object_detection::navCallback, this);
         img_sub = nh.subscribe(sub_image_raw_topic_name, 1, &object_detection::imageCallback, this);
+        speech_sub = nh.subscribe(sub_speech_topic_name, 1, &object_detection::speechCallback, this);
         obj_pub = nh.advertise<kamerider_image_msgs::ObjectPosition>(pub_object_pos_topic_name, 1);
         pcl_pub = nh.advertise<sensor_msgs::PointCloud2>(pub_tf_pcl_topic_name, 1);
         
