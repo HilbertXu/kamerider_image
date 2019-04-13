@@ -17,6 +17,7 @@ from std_msgs.msg import Int8
 from std_msgs.msg import String 
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
+from kamerider_image_msgs.msg import mission
 # openpose module
 from openpose import pyopenpose as op
 
@@ -25,6 +26,8 @@ IMAGE_DIR = "/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_detectio
 class pose_detection:
     def __init__(self):
         self.params = dict()
+        self.target_pose = None
+        self.result_pose = []
         self.start_pose_detect = False
         self.take_photo = False
         self.pose_detect_finish = False
@@ -42,22 +45,24 @@ class pose_detection:
     def set_param(self):
         # ROS param参数服务器中取得参数值
         self.sub_image_raw_topic_name             = rospy.get_param('sub_image_raw_topic_name',          '/astra/rgb/image_raw')
-        self.sub_control_back_topic_name          = rospy.get_param('sub_control_back_topic_name',       '/found_person')
+        self.sub_control_back_topic_name          = rospy.get_param('sub_control_back_topic_name',       '/control_to_image')
         self.pub_pose_detect_result_topic_name    = rospy.get_param('pub_pose_detect_result_topic_name', '/kamerider_image/pose_detect')
         self.pub_to_control                       = rospy.get_param("pub_to_control",                    '/kamerider_speech/input')
         
         # 发布器和订阅器
         rospy.Subscriber(self.sub_image_raw_topic_name, Image, self.imageCallback)
-        rospy.Subscriber(self.sub_control_back_topic_name, String, self.ctrlCallback)
+        rospy.Subscriber(self.sub_control_back_topic_name, mission, self.ctrlCallback)
         self.pub_result = rospy.Publisher(self.pub_pose_detect_result_topic_name, String, queue_size=1)
-        self.pub_control = rospy.Publisher(self.pub_to_control, String, queue_size=1)
+        self.speech_pub = rospy.Publisher(self.pub_to_control, String, queue_size=1)
         
         # 设置openpose手部特征点检测时的参数
         self.params["model_folder"] = "/home/nvidia/openpose/models"
 
     def ctrlCallback(self, msg):
-        if msg.data == "found_person":
-            rospy.loginfo("found person start to take a photo")
+        if msg.mission_type == "pose":
+            if msg.mission_name:
+                self.target_pose = msg.mission_name
+            rospy.loginfo("start to take a photo")
             self.take_photo = True
     
     def imageCallback(self, msg):
@@ -109,34 +114,73 @@ class pose_detection:
         #     {23, "RSmallToe"},
         #     {24, "RHeel"},
         #     {25, "Background"}
+        if self.target_pose:
             # 首先判断人是站着还是躺在地上（不脏么。。。）
             # 判断Neck和MidHip 之间y轴方向上的距离和x轴方向上的距离大小
             if (abs(pose_points[1][0] - pose_points[8][0]) > abs(pose_points[1][1] - pose_points[8][1])):
                 rospy.loginfo("The person in front of me is lying on the ground")
-                self.pub_control.publish("The person in front of me is lying on the ground")
-                self.pub_result.publish("lying down")
-                self.pose_detect_finish = True
+                self.result_pose.append("lying down")
             
             else:
                 # 然后判断这个人是举左手还是举右手
                 if (pose_points[6][1] < pose_points[5][1]) or (pose_points[7][1] < pose_points[6][1]):
                     rospy.loginfo("The person in front of me is raising his left hand")
-                    self.pub_control.publish("The person in front of me is raising his left hand")
-                    self.pub_result.publish("raising left hand")
+                    self.result_pose.append("raising left")
+
                 if (pose_points[3][1] < pose_points[2][1]) or (pose_points[4][1] < pose_points[3][1]):
                     rospy.loginfo("The person in front of me is raising his right hand")
-                    self.pub_control.publish("The person in front of me is raising his right hand")
-                    self.pub_result.publish("raising left hand")
+                    self.result_pose.append("raising right")
                 
                 # 判断这个人是指向左边还是右边
                 if (abs(pose_points[6][0] - pose_points[5][0]) > abs(pose_points[3][0] - pose_points[2][0])):
                     rospy.loginfo("The person in front of me is pointing to the left")
-                    self.pub_control.publish("The person in front of me is pointing to the left")
-                    self.pub_result.publish("pointing to the left")
+                    self.result_pose.append("pointing left")
+
                 if (abs(pose_points[6][0] - pose_points[5][0]) < abs(pose_points[3][0] - pose_points[2][0])):
                     rospy.loginfo("The person in front of me is pointing to the right")
-                    self.pub_control.publish("The person in front of me is pointing to the right")
-                    self.pub_result.publish("pointing to the right")
+                    self.result_pose.append("pointing right")
+            if self.target_pose in self.result_pose:
+                msg = String()
+                msg.data = "I have found the person {}".format(self.target_pose)
+                self.speech_pub.publish(msg)
+
+        else:       
+            if (abs(pose_points[1][0] - pose_points[8][0]) > abs(pose_points[1][1] - pose_points[8][1])):
+                rospy.loginfo("The person in front of me is lying on the ground")
+                self.speech_pub.publish("The person in front of me is lying on the ground")
+                self.pub_result.publish("lying down")
+                self.pose_detect_finish = True
+            
+            elif (pose_points[6][1] < pose_points[5][1]) or (pose_points[7][1] < pose_points[6][1]) or (pose_points[3][1] < pose_points[2][1]) or (pose_points[4][1] < pose_points[3][1]):
+                # 然后判断这个人是是否举手
+                if (pose_points[6][1] < pose_points[5][1]) or (pose_points[7][1] < pose_points[6][1]):
+                    rospy.loginfo("The person in front of me is raising his left hand")
+                    msg = String()
+                    msg.data = "The person in front of me is raising his left hand"
+                    self.speech_pub.publish(msg)
+                    self.pub_result.publish("raising left")
+
+                if (pose_points[3][1] < pose_points[2][1]) or (pose_points[4][1] < pose_points[3][1]):
+                    rospy.loginfo("The person in front of me is raising his right hand")
+                    msg = String()
+                    msg.data = "The person in front of me is raising his right hand"
+                    self.speech_pub.publish(msg)
+                    self.pub_result.publish("raising left")
+            else:  
+                # 判断这个人是指向左边还是右边
+                if (abs(pose_points[6][0] - pose_points[5][0]) > abs(pose_points[3][0] - pose_points[2][0])):
+                    rospy.loginfo("The person in front of me is pointing to the left")
+                    msg = String()
+                    msg.data = "The person in front of me is pointing to the left"
+                    self.speech_pub.publish(msg)
+                    self.pub_result.publish("pointing left")
+
+                if (abs(pose_points[6][0] - pose_points[5][0]) < abs(pose_points[3][0] - pose_points[2][0])):
+                    rospy.loginfo("The person in front of me is pointing to the right")
+                    msg = String()
+                    msg.data = "The person in front of me is pointing to the right"
+                    self.speech_pub.publish(msg)
+                    self.pub_result.publish("pointing right")
     
 if __name__ == '__main__':
     rospy.init_node("pose_detection")

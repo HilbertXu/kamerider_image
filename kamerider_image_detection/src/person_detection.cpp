@@ -42,13 +42,14 @@ void turn_robot(float theta);
 /// 全局变量
 
 const char* window_name = "person_detection";
-String face_cascade_name = "/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_detection/dataset/haarcascade_fullbody.xml";  
+String face_cascade_name = "/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_detection/dataset/haarcascade_frontalface_alt.xml";  
 //String eyes_cascade_name = "/home/isi/2017_ws/src/imgpcl/haarcascade_eye_tree_eyeglasses.xml";  
 CascadeClassifier face_cascade;
 
 ros::Publisher move_pub; //向navigation发消息，微调机器人
 ros::Publisher result_pub;   //检测到物体的数量
 ros::Publisher image_pub;
+ros::Publisher control_pub;
 ros::Subscriber control_sub;
 ros::Subscriber image_sub;
 
@@ -137,7 +138,11 @@ void image_process(Mat inImg)
             msg_to_control.data = "I have reached the person!";
             image_pub.publish(msg_to_control); 
             iffind_personP.data = "found_person";
-            result_pub.publish(iffind_personP);                       		    state = 2;		
+            result_pub.publish(iffind_personP);                       		    
+            state = 2;
+            std_msgs::String control_msg;
+            control_msg.data = "person_target_found";
+            control_pub.publish(control_msg);
 	    }
     }
 	imwrite("/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_detection/result/found_person.jpg",inImg);//保存图片    
@@ -219,6 +224,7 @@ int main(int argc, char **argv)
     move_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel_mux/input/navi",1);  //移动
     result_pub = nh.advertise<std_msgs::String>("/found_person", 1);
     image_pub = nh.advertise<std_msgs::String>("/kamerider_speech/input", 1);
+    control_pub = nh.advertise<std_msgs::String>("/image_to_control", 1);
 
     control_sub = nh.subscribe("/control_to_image", 1, ctrlCallback);
     image_sub = nh.subscribe("/astra/rgb/image_raw", 1, imageCallback);

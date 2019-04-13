@@ -18,6 +18,7 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 from kamerider_image_msgs.msg import GenderDetection
+from kamerider_speech.msg import mission
 
 
 class gender_recognition:
@@ -32,24 +33,28 @@ class gender_recognition:
         self.SECRET_KEY = 'QK8G70TKjRl4WnqlGIAtIwgNGcV03p7X'
         
         #ros params
+        self.result_gender = None
+        self.target_gender = None
         self.take_photo_signal=False
-        self.sub_take_photo_signal_topic_name=None
+        self.sub_control_topic_name=None
         self.sub_image_raw_topic_name=None
         self.pub_gender_recognition_topic_name=None
         self.path_to_save_image=None
         self.pub_result=None
+        self.speech_pub = None
         self.get_params()
 
     def get_params(self):
-        self.sub_image_raw_topic_name          = rospy.get_param('sub_image_raw_topic_name',          '/image_raw')
-        self.sub_take_photo_signal_topic_name  = rospy.get_param('sub_take_photo_signal_topic_name',  '/take_photo_signal')
+        self.sub_image_raw_topic_name          = rospy.get_param('sub_image_raw_topic_name',          '/astra/rgb/image_raw')
+        self.sub_control_topic_name            = rospy.get_param('sub_control_topic_name',  '/control_to_image')
         self.pub_gender_recognition_topic_name = rospy.get_param('pub_gender_recognition_topic_name', '/kamerider_image/gender_recognition')
-        self.path_to_save_image                = rospy.get_param('path_to_save_image',                '/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/test_images/image_capture.jpg')
-        self.path_to_save_result               = rospy.get_param('path_to_save_result',               '/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_detection/result/gender_recognition_result.jpg')     
+        self.path_to_save_image                = rospy.get_param('path_to_save_image',                '/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_detection/test_images/gender_image_capture.jpg')
+        self.path_to_save_result               = rospy.get_param('path_to_save_result',               '/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_detection/result/gender_recognition_result.jpg')     
         #定义R发布器和订阅器，话题名通过ROS PARAM参数服务器获取
         rospy.Subscriber(self.sub_image_raw_topic_name, Image, self.imageCallback)
-        rospy.Subscriber(self.sub_take_photo_signal_topic_name, String, self.signalCallback)
+        rospy.Subscriber(self.sub_control_topic_name, mission, self.controlCallback)
         self.pub_result = rospy.Publisher(self.pub_gender_recognition_topic_name, GenderDetection, queue_size=1)
+        self.speech_pub = rospy.Publisher("/kamerider_speech/input", String, queue_size=1)
 
     def imageCallback(self, msg):
         if self.take_photo_signal:
@@ -69,10 +74,13 @@ class gender_recognition:
         base64_image = str(image)
         return base64_image
         
-    def signalCallback(self, msg):
-        if msg.data == 'take_photo':
+    def controlCallback(self, msg):
+        if msg.mission_type == 'gender':
+            if msg.mission_name:
+                self.target_gender = msg.mission_name
             print ("[INFO] Signal Received")
             self.take_photo_signal = True
+
 
     #检测函数
     def detection(self):
@@ -119,11 +127,29 @@ class gender_recognition:
         gender_message.male_num   = male_num
         gender_message.sit_num    = 0
         gender_message.stand_num  = 0
-        #保存并显示处理后的图片
+
+        msg = String()
+        msg.data = "This is the result of gender recognition"
+        self.speech_pub.publish(msg)
+        msg.data = "male number is " + str(male_num)
+        self.speech_pub.publish(msg)
+        msg.data = "female number is "+ str(female_num)
+        self.speech_pub.publish(msg)
         cv2.imwrite(self.path_to_save_result, cv_image)
         self.pub_result.publish(gender_message)
+
+        if self.target_gender:
+            if self.target_gender == "male" and male_num != 0:
+                msg.data = "I have found the male person"
+                self.speech_pub.publish(msg)
+            if self.target_gender == "female" and female_num != 0:
+                msg.data = "I have found the female person"
+                self.speech_pub.publish(msg)
+                
+        #保存并显示处理后的图片
         cv2.imshow('result', cv2.imread(self.path_to_save_result))
         cv2.waitKey(100)
+
 
 if __name__ == '__main__':
     #初始化节点
