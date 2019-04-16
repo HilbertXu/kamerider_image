@@ -38,6 +38,7 @@ class gender_recognition:
         self.take_photo_signal=False
         self.sub_control_topic_name=None
         self.sub_image_raw_topic_name=None
+        self.pub_to_control_topic_name=None
         self.pub_gender_recognition_topic_name=None
         self.path_to_save_image=None
         self.pub_result=None
@@ -48,6 +49,7 @@ class gender_recognition:
         self.sub_image_raw_topic_name          = rospy.get_param('sub_image_raw_topic_name',          '/astra/rgb/image_raw')
         self.sub_control_topic_name            = rospy.get_param('sub_control_topic_name',  '/control_to_image')
         self.pub_gender_recognition_topic_name = rospy.get_param('pub_gender_recognition_topic_name', '/kamerider_image/gender_recognition')
+        self.pub_to_control_topic_name         = rospy.get_param('pub_to_control_topic_name',         '/image_to_control')
         self.path_to_save_image                = rospy.get_param('path_to_save_image',                '/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_detection/test_images/gender_image_capture.jpg')
         self.path_to_save_result               = rospy.get_param('path_to_save_result',               '/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_detection/result/gender_recognition_result.jpg')     
         #定义R发布器和订阅器，话题名通过ROS PARAM参数服务器获取
@@ -55,6 +57,7 @@ class gender_recognition:
         rospy.Subscriber(self.sub_control_topic_name, mission, self.controlCallback)
         self.pub_result = rospy.Publisher(self.pub_gender_recognition_topic_name, GenderDetection, queue_size=1)
         self.speech_pub = rospy.Publisher("/kamerider_speech/input", String, queue_size=1)
+        self.pub_control = rospy.Publisher(self.pub_to_control_topic_name, String, queue_size=1)
 
     def imageCallback(self, msg):
         if self.take_photo_signal:
@@ -76,8 +79,7 @@ class gender_recognition:
         
     def controlCallback(self, msg):
         if msg.mission_type == 'gender':
-            if msg.mission_name:
-                self.target_gender = msg.mission_name
+            self.target_gender = msg.mission_name
             print ("[INFO] Signal Received")
             self.take_photo_signal = True
 
@@ -121,6 +123,7 @@ class gender_recognition:
                 male_num=male_num+1
             if result['result']['face_list'][i]['gender']['type'] == 'female' :
                 female_num = female_num + 1
+        cv2.imwrite(self.path_to_save_result, cv_image)
         #生成自定义消息类型的对象
         gender_message = GenderDetection()
         gender_message.female_num = female_num
@@ -128,27 +131,50 @@ class gender_recognition:
         gender_message.sit_num    = 0
         gender_message.stand_num  = 0
 
-        msg = String()
-        msg.data = "This is the result of gender recognition"
-        self.speech_pub.publish(msg)
-        msg.data = "male number is " + str(male_num)
-        self.speech_pub.publish(msg)
-        msg.data = "female number is "+ str(female_num)
-        self.speech_pub.publish(msg)
-        cv2.imwrite(self.path_to_save_result, cv_image)
-        self.pub_result.publish(gender_message)
+        if self.target_gender == "none":
+            msg = String()
+	    control_msg = String()
+            msg.data = "This is the result of gender recognition"
+            self.speech_pub.publish(msg)
+            rospy.sleep(3)
+            msg.data = "male number is " + str(male_num)
+            self.speech_pub.publish(msg)
+            rospy.sleep(3)
+            msg.data = "female number is "+ str(female_num)
+            self.speech_pub.publish(msg)
+            self.pub_result.publish(gender_message)
+            control_msg.data = "target_gender_detected"
+            self.pub_control.publish(control_msg)
 
-        if self.target_gender:
-            if self.target_gender == "male" and male_num != 0:
-                msg.data = "I have found the male person"
-                self.speech_pub.publish(msg)
-            if self.target_gender == "female" and female_num != 0:
-                msg.data = "I have found the female person"
-                self.speech_pub.publish(msg)
+        if self.target_gender != "none":
+            msg = String()
+            control_msg = String()
+            if self.target_gender == "male" or self.target_gender == "boy" or self.target_gender == "man":
+                if male_num != 0:
+                    msg.data = "I have found the male person"
+                    control_msg.data = "target_gender_detected"
+                    self.pub_control.publish(control_msg)
+                    self.speech_pub.publish(msg)
+                if male_num == 0:
+                    msg.data = "sorry i cannot find {} person i will try again".format(self.target_gender)
+                    control_msg.data = "target_gender_not_detected"
+                    self.pub_control.publish(control_msg)
+                    self.speech_pub.publish(msg)
+            if self.target_gender == "female" or self.target_gender == 'women' or self.target_gender == 'girl':
+                if female_num != 0:
+                    control_msg.data = "target_gender_detected"
+                    msg.data = "I have found the female person"
+                    self.pub_control.publish(control_msg)
+                    self.speech_pub.publish(msg)
+                if female_num == 0:
+                    msg.data = "sorry i cannot find {} person i will try again".format(self.target_gender)
+                    control_msg.data = "target_gender_not_detected"
+                    self.pub_control.publish(control_msg)
+                    self.speech_pub.publish(msg)
                 
-        #保存并显示处理后的图片
-        cv2.imshow('result', cv2.imread(self.path_to_save_result))
-        cv2.waitKey(100)
+        # 保存并显示处理后的图片
+        # cv2.imshow('result', cv2.imread(self.path_to_save_result))
+        # cv2.waitKey(100)
 
 
 if __name__ == '__main__':

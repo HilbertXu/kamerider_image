@@ -176,6 +176,9 @@ target_link_libraries(save_pcl_as_pcd ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${
 add_executable(save_image src/save_image.cpp)
 target_link_libraries(save_image ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
 
+add_executable(get_position src/get_position.cpp)
+target_link_libraries(get_position ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
+
 
 #############
 ## Install ##

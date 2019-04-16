@@ -18,6 +18,7 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
 from cv_bridge import CvBridge, CvBridgeError
+from kamerider_image_msgs.msg import mission
 
 
 
@@ -33,12 +34,14 @@ class person_detection:
         self.SECRET_KEY = 'oNewRv2mtqfknwzq3rgEFc3sP4SAbI0v'
         
         #ros params
+        self.msg_count = 0
         self._turn = False
-        self.find_person = False
+        self.find_person = True
         self.start_detect = False
         self.angle_count = 0
-        self.take_photo_signal = True
+        self.take_photo_signal = False
         self.sub_image_raw_topic_name=None
+        self.sub_control_topic_name = None
         self.pub_person_detect_topic_name=None
 
         self.path_to_save_image=None
@@ -47,12 +50,16 @@ class person_detection:
         self.speech_pub = None
         self.client = None
         self.get_params()
-        while (self.find_person == False):
-            if self.start_detect == True:
-                self.detection()
+        self.turn_robot(1.8)
+        while (True):
+            if self.find_person == False:
+                rospy.loginfo("Msg received start person detection")
+                if self.start_detect == True:
+                    self.detection()
 
     def get_params(self):
         self.sub_image_raw_topic_name          = rospy.get_param('sub_image_raw_topic_name',          '/astra/rgb/image_raw')
+        self.sub_control_topic_name            = rospy.get_param("sub_control_topic_name",            '/control_to_image')
         self.pub_person_detect_topic_name      = rospy.get_param('pub_person_detect_topic_name',      '/image_to_control')
         self.pub_to_move_base_topic_name       = rospy.get_param('pub_to_move_base_topic_name',       '/cmd_vel_mux/input/navi')
         self.pub_to_speech_topic_name          = rospy.get_param("pub_to_speech_topic_name",          '/kamerider_speech/input')
@@ -60,9 +67,19 @@ class person_detection:
         self.path_to_save_result               = rospy.get_param('path_to_save_result',               '/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_detection/result/person_detection_result.jpg')     
         #定义R发布器和订阅器，话题名通过ROS PARAM参数服务器获取
         rospy.Subscriber(self.sub_image_raw_topic_name, Image, self.imageCallback)
+        rospy.Subscriber(self.sub_control_topic_name, mission, self.controlCallback)
         self.pub_result = rospy.Publisher(self.pub_person_detect_topic_name, String, queue_size=1)
         self.move_pub   = rospy.Publisher(self.pub_to_move_base_topic_name, Twist, queue_size=1)
         self.speech_pub = rospy.Publisher(self.pub_to_speech_topic_name, String, queue_size=1)
+    
+    def controlCallback(self, msg):
+        if msg.mission_type == "person":
+            self.msg_count += 1
+            if self.msg_count > 1:
+                self.forward_robot(-0.5)
+                self.turn_robot(1.8)
+            self.find_person = False
+            self.take_photo_signal = True
 
     def imageCallback(self, msg):
         bridge = CvBridge()
@@ -80,7 +97,6 @@ class person_detection:
             self.start_detect = True
             self.take_photo_signal = False
             
-    
     def image_encode(self):
         with open(self.path_to_save_image, 'rb') as f:
             return f.read()
@@ -128,17 +144,17 @@ class person_detection:
             cv2.imwrite(self.path_to_save_result, image)
             
             if person_x-320 > 80:
-                self.turn_robot(-1.2)
+                self.turn_robot(-1.1)
             if person_x -320 < -80:
-                self.turn_robot(1.2)
-            if (person_info["location"]["top"] < 200):
+                self.turn_robot(1.1)
+            if (person_info["location"]["top"] < 240):
                 self.forward_robot(0.5)
                 self.find_person = True
                 rospy.loginfo("Person Target Reached!")
                 control_msg = String()
                 speech_msg = String()
                 control_msg.data = "person_target_found"
-                speech_msg.data = "I have reached the target person, please stand in front of me and lead me"
+                speech_msg.data = "I have reached the target person"
                 self.speech_pub.publish(speech_msg)
                 self.pub_result.publish(control_msg) 
         
