@@ -13,11 +13,11 @@ find_package(Boost REQUIRED COMPONENTS system)
 find_package(OpenCV REQUIRED)
 
 #Find PCL required
-find_package(PCL 1.9 REQUIRED)
-set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARIES})
-add_definitions(${PCL_DEFINITIONS})
+#find_package(PCL 1.9 REQUIRED)
+#set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
+#include_directories(${PCL_INCLUDE_DIRS})
+#link_directories(${PCL_LIBRARIES})
+#add_definitions(${PCL_DEFINITIONS})
 
 
 find_package(catkin REQUIRED COMPONENTS
@@ -170,48 +170,15 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-
-add_executable(get_position src/get_position.cpp)
-target_link_libraries(get_position ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_dataFormat src/pcl_dataFormat.cpp)
-target_link_libraries(pcl_dataFormat ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_withFilter src/pcl_withFilter.cpp)
-target_link_libraries(pcl_withFilter ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
 add_executable(save_pcl_as_pcd src/save_pcl_as_pcd.cpp)
-target_link_libraries(save_pcl_as_pcd ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcd_visualization src/pcd_visualization.cpp)
-target_link_libraries(pcd_visualization ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcd_simple_viewer src/pcd_simple_viewer.cpp)
-target_link_libraries(pcd_simple_viewer ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_keypoint_detect src/pcl_keypoint_detect.cpp)
-target_link_libraries(pcl_keypoint_detect ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_segmentate src/pcl_segmentate.cpp)
-target_link_libraries(pcl_segmentate ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_supervoxel src/pcl_supervoxel.cpp)
-target_link_libraries(pcl_supervoxel ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_rgb_merge src/pcl_rgb_merge.cpp)
-target_link_libraries(pcl_rgb_merge ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_PMF src/pcl_PMF.cpp)
-target_link_libraries(pcl_PMF ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(pcl_ransac src/pcl_ransac.cpp)
-target_link_libraries(pcl_ransac ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
-
-add_executable(find_object src/find_object.cpp)
-target_link_libraries(find_object ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(save_pcl_as_pcd ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
 
 add_executable(save_image src/save_image.cpp)
-target_link_libraries(save_image ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(save_image ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
+
+add_executable(get_position src/get_position.cpp)
+target_link_libraries(get_position ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} ${dlib_LIBRARIES})
+
 
 #############
 ## Install ##

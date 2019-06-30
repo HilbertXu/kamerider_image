@@ -26,7 +26,11 @@ int main (int argc, char** argv)
 
     std::cout << argv[1];
 
+<<<<<<< HEAD
+    std::string dir = "/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_pcl/pcd_files/"; 
+=======
     std::string dir = "/home/kamerider/catkin_ws/src/kamerider_image/kamerider_image_pcl/pcd_files/"; 
+>>>>>>> 261fd9506b3f94d2cbd0a25adb7a2701f752120d
     std::string filename = argv[1]; 
 
     if (pcl::io::loadPCDFile<PointT> ((dir+filename), *cloud) == -1)

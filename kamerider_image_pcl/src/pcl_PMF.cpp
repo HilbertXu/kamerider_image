@@ -9,7 +9,7 @@ Identifying ground returns using ProgressiveMorphologicalFilter segmentation
 #include <pcl/filters/extract_indices.h>
 #include <pcl/segmentation/progressive_morphological_filter.h>
 
-std::string PCD_DIR = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/";
+std::string PCD_DIR = "/home/nvidia/catkin_ws/src/image_pcl/pcd_files/";
 
 int
 main (int argc, char** argv)

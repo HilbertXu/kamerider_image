@@ -15,11 +15,6 @@ find_package(OpenCV)
 find_package(OpenPose REQUIRED)
 
 find_package(OpenCV REQUIRED)
-find_package(PCL 1.9 REQUIRED)
-set(PCL_INCLUDE_DIRS /usr/include/pcl-1.9)
-include_directories(${PCL_INCLUDE_DIRS})
-link_directories(${PCL_LIBRARIES})
-add_definitions(${PCL_DEFINITIONS})
 
 find_package(dlib REQUIRED)
 set(dlib_INCLUDE_DIRS /usr/local/include/dlib)
@@ -212,8 +207,8 @@ target_link_libraries(tf_listener ${catkin_LIBRARIES})
 add_executable(tf_talker src/tf_talker.cpp)
 target_link_libraries(tf_talker ${catkin_LIBRARIES})
 
-add_executable(object_detection_on_mouse src/object_detection_on_mouse.cpp)
-target_link_libraries(object_detection_on_mouse ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+add_executable(person_detection src/person_detection.cpp)
+target_link_libraries(person_detection ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 #############
 ## Install ##

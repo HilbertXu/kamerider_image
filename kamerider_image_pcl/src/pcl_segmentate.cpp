@@ -49,8 +49,8 @@ typedef pcl::LCCPSegmentation<PointT>::SupervoxelAdjacencyList SupervoxelAdjacen
 
 //全局变量
 bool IF_SAVE_PCL = false;
-std::string PCD_DIR = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/";
-std::string OUTPUT_DIR = "/home/kamerider/catkin_ws/src/image_pcl/segmentation_output/";
+std::string PCD_DIR = "/home/nvidia/catkin_ws/src/image_pcl/pcd_files/";
+std::string OUTPUT_DIR = "/home/nvidia/catkin_ws/src/image_pcl/segmentation_output/";
 pcl::PointCloud<PointT>::Ptr origin_cloud_ptr (new pcl::PointCloud<pcl::PointXYZRGBA>);
 pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud_ptr (new pcl::PointCloud<pcl::PointXYZI>);
 

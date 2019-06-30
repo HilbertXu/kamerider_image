@@ -36,7 +36,7 @@ using namespace cv;
 //定义全局变量来储存接受到的点云
 pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_frame (new pcl::PointCloud<pcl::PointXYZ>);
 pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_rgb (new pcl::PointCloud<pcl::PointXYZRGB>);
-string PCD_PATH = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files";
+string PCD_PATH = "/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_pcls/pcd_files";
 string PCL_TOPIC_NAME;
 string RGB_TOPIC_NAME;
 
@@ -152,8 +152,8 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "save_pcl_as_pcd");
     ros::NodeHandle nh;
 
-    pcl_sub = nh.subscribe("/camera/depth/points", 1, pclCallback);
-    img_sub = nh.subscribe("/image_raw", 1, imageCallback);
+    pcl_sub = nh.subscribe("/astra/depth/points", 1, pclCallback);
+    img_sub = nh.subscribe("/astra/rgb/image_raw", 1, imageCallback);
 
     ros::spin();
     return 0;

@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 		tf::StampedTransform CurrTf;
 		
 		try{
-		  listener.lookupTransform("/base_link", "/astra_depth_frame",ros::Time(0), CurrTf);
+		  listener.lookupTransform("/astra_depth_optical_frame", "/base_link",ros::Time(0), CurrTf);
 		}
 		catch (tf::TransformException &ex) {
 		  ROS_ERROR("%s",ex.what());

@@ -35,7 +35,7 @@ using namespace cv;
 using namespace std;
 
 
-std::string PCD_DIR = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/";
+std::string PCD_DIR = "/home/nvidia/catkin_ws/src/image_pcl/pcd_files/";
 std::string FILE_NAME;
 
 int main(int argc, char** argv)

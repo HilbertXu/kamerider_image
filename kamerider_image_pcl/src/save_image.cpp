@@ -13,7 +13,9 @@ Author: Xu Yucheng
 #include <stdio.h>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <ros/ros.h>
+#include <std_msgs/String.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
@@ -23,10 +25,13 @@ using namespace std;
 using namespace cv;
 
 ros::Subscriber img_sub;
+ros::Subscriber ctrl_sub;
+vector<cv::Mat> temp;
 
-std::string DATASET_DIR = "/home/kamerider/darknet/RoboCup_2019/dataset/JPEGImages/";
+std::string DATASET_DIR = "/home/nvidia/catkin_ws/src/kamerider_image/kamerider_image_pcl/robocup_2019/JPEGImages/";
 
-int pCount = 3;
+int pCount = 3089;
+bool save_image = false;
 
 string int2str(int &int_temp)
 {
@@ -43,18 +48,28 @@ void imageCallback (const sensor_msgs::ImageConstPtr& msg)
     cv::Mat img = cv_ptr -> image;
     cv::namedWindow("demo", CV_WINDOW_AUTOSIZE);
     cv::imshow("demo", img);
-    int key = cv::waitKey(10);
-    if (key == 's')
+    cv::waitKey(10);
+    if(temp.size() < 100)
     {
-        for (int i=0; i<50; i++)
+        temp.push_back(img); 
+    }
+    else
+    {
+        temp.erase(temp.begin());
+    }
+}
+
+void ctrlCallback (const std_msgs::String::ConstPtr& msg)
+{
+    if (msg->data == "start")
+    {
+        for (int i =0; i< temp.size(); i++)
         {
-            int num = i + pCount*50;
-            std::string idx = int2str(num);
-            std::string FULL_PATH = DATASET_DIR + idx + ".jpg";
-            ROS_INFO ("Writing RGB image %s", FULL_PATH.c_str());
-            cv::imwrite (FULL_PATH, img);
+            string full_path = DATASET_DIR + int2str(pCount) + ".png";
+            cv::imwrite(full_path, temp[i]); 
+            pCount ++;   
         }
-        pCount ++;
+        
     }
 }
 
@@ -63,8 +78,8 @@ int main(int argc, char** argv)
     ros::init (argc, argv, "take_photo");
     ros::NodeHandle nh;
 
-    img_sub = nh.subscribe ("/image_raw", 1, imageCallback);
-
+    img_sub = nh.subscribe ("/astra/rgb/image_raw", 1, imageCallback);
+    ctrl_sub = nh.subscribe ("/take_photo", 1, ctrlCallback);
     ros::spin();
     return 0 ;
 }

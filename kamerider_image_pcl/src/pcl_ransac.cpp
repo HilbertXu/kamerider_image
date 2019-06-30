@@ -18,7 +18,7 @@ int main (int argc, char** argv)
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::PCDReader reader;
 
-    std::string PCD_DIR = "/home/kamerider/catkin_ws/src/image_pcl/pcd_files/";
+    std::string PCD_DIR = "/home/nvidia/catkin_ws/src/image_pcl/pcd_files/";
     std::string FULL_PATH = PCD_DIR + argv[1];
     // 读入点云PCD文件
     reader.read(FULL_PATH,*cloud);

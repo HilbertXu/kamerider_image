@@ -159,13 +159,13 @@ int main(int argc, char **argv)
 
     ros::NodeHandle nh;
     std::cout << "subscribe pcl topic" << std::endl;
-    pcl_sub = nh.subscribe("/camera/depth/points", 1, pclCallback);
+    pcl_sub = nh.subscribe("/astra/depth/points", 1, pclCallback);
     
     std::cout << "publish pcl message" << std::endl;
     pcl_pub = nh.advertise<sensor_msgs::PointCloud2>("/astra_pcl",1);
     
     std::cout << "subscribe RGB image" << std::endl;
-    img_sub = nh.subscribe("/image_raw", 1, imageCallback);
+    img_sub = nh.subscribe("/astra/rgb/image_raw", 1, imageCallback);
 
     ros::spin();
     return 0;
